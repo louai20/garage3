@@ -16,7 +16,6 @@ namespace garage3.Data
         [Required, MaxLength(20)]
         public string PersonalNumber { get; set; } = string.Empty;
 
-        public DateOnly? DateOfBirth { get; set; }
 
         [MaxLength(20)]
         public string MembershipType { get; set; } = "Standard";
