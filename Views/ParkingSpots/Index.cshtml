@@ -21,11 +21,12 @@
             <th>
                 @Html.DisplayNameFor(model => model.IsOccupied)
             </th>
+            <th>Vehicle</th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
+    @foreach (var item in Model) {
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.SpotNumber)
@@ -36,12 +37,25 @@
             <td>
                 @Html.DisplayFor(modelItem => item.IsOccupied)
             </td>
+                <td>
+                    @{
+                        var activeParking = item.Parkings
+                        .FirstOrDefault(p => p.CheckOutTime == null);
+                    }
+
+                    @if (activeParking != null) {
+                        @activeParking.Vehicle.RegistrationNumber
+                    } else {
+                        <span>-</span>
+                    }
+                </td>
             <td>
                 <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
                 <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
                 <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
             </td>
+
         </tr>
-}
+        }
     </tbody>
 </table>

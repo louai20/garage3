@@ -1,15 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using garage3.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using garage3.Data;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace garage3
+namespace garage3.Controllers
 {
-    public class ParkingSpotsController : Controller
+	[Authorize(Roles = "Admin")]
+	public class ParkingSpotsController : Controller
     {
         private readonly ApplicationDbContext _context;
 
@@ -21,8 +23,17 @@ namespace garage3
         // GET: ParkingSpots
         public async Task<IActionResult> Index()
         {
-            return View(await _context.ParkingSpots.ToListAsync());
-        }
+			var spots = await _context.ParkingSpots
+	            .Include(s => s.Parkings)
+		        .ThenInclude(p => p.Vehicle)
+	            .Where(s => !s.Parkings.Any() || s.Parkings.Any(p => p.CheckOutTime == null))
+	            .ToListAsync();
+
+			return View(spots);
+		}
+
+           // return View(await _context.ParkingSpots.ToListAsync());
+        
 
         // GET: ParkingSpots/Details/5
         public async Task<IActionResult> Details(int? id)
@@ -55,7 +66,15 @@ namespace garage3
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,SpotNumber,Size,IsOccupied")] ParkingSpot parkingSpot)
         {
-            if (ModelState.IsValid)
+
+			// Check if spot number already exists
+			bool spotExits =  await _context.ParkingSpots.AnyAsync(s => s.SpotNumber == parkingSpot.SpotNumber);
+            if (spotExits)
+            {
+				ModelState.AddModelError(nameof(ParkingSpot.SpotNumber),"Spot number already exists.");
+			}
+
+			if (ModelState.IsValid)
             {
                 _context.Add(parkingSpot);
                 await _context.SaveChangesAsync();
@@ -92,7 +111,15 @@ namespace garage3
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+			// Check if spot number already exists in other records
+			bool spotExits = await _context.ParkingSpots.AnyAsync(s => s.SpotNumber == parkingSpot.SpotNumber && s.Id != parkingSpot.Id);
+			if (spotExits) {
+				ModelState.AddModelError(nameof(ParkingSpot.SpotNumber), "Spot number already exists.");
+			}
+
+
+
+			if (ModelState.IsValid)
             {
                 try
                 {
