@@ -18,9 +18,7 @@
             <th>
                 @Html.DisplayNameFor(model => model.Size)
             </th>
-            <th>
-                @Html.DisplayNameFor(model => model.IsOccupied)
-            </th>
+
             <th>Vehicle</th>
             <th></th>
         </tr>
@@ -34,9 +32,7 @@
             <td>
                 @Html.DisplayFor(modelItem => item.Size)
             </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.IsOccupied)
-            </td>
+   
                 <td>
                     @{
                         var activeParking = item.Parkings
