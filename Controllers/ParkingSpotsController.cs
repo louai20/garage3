@@ -163,19 +163,30 @@ namespace garage3.Controllers
         // POST: ParkingSpots/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var parkingSpot = await _context.ParkingSpots.FindAsync(id);
-            if (parkingSpot != null)
-            {
-                _context.ParkingSpots.Remove(parkingSpot);
-            }
+		public async Task<IActionResult> DeleteConfirmed(int id)
+		{
+			var parkingSpot = await _context.ParkingSpots
+				.FirstOrDefaultAsync(ps => ps.Id == id);
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
+			if (parkingSpot == null)
+				return RedirectToAction(nameof(Index));
 
-        private bool ParkingSpotExists(int id)
+			var hasAnyParkings = await _context.Parkings
+				.AnyAsync(p => p.ParkingSpotId == id && p.CheckOutTime == null);
+
+			if (hasAnyParkings) {
+				ModelState.AddModelError(string.Empty, "Cannot delete parking spot because it has an active parking.");
+				return View(parkingSpot);
+			}
+
+			_context.ParkingSpots.Remove(parkingSpot);
+			await _context.SaveChangesAsync();
+
+			TempData["Success"] = "Parking spot deleted.";
+			return RedirectToAction(nameof(Index));
+		}
+
+		private bool ParkingSpotExists(int id)
         {
             return _context.ParkingSpots.Any(e => e.Id == id);
         }

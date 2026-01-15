@@ -1,0 +1,77 @@
+﻿
+@model IEnumerable<garage3.Data.Parking>
+
+
+
+@{
+    ViewData["Title"] = "Parked Vehicles";
+}
+
+<h1>Parked Vehicles</h1>
+
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    var vehicleTypes = ViewBag.VehicleTypes as List<garage3.Data.VehicleType>;
+    var selectedVehicleTypeId = Context.Request.Query["vehicleTypeId"];
+}
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-4">
+        <select name="vehicleTypeId" class="form-select">
+            <option value="">All vehicle types</option>
+            @foreach (var vt in vehicleTypes!) {
+                <option value="@vt.Id"
+                        selected="@(vt.Id.ToString() == selectedVehicleTypeId)">
+                    @vt.Name
+                </option>
+            }
+        </select>
+    </div>
+
+    <div class="col-md-4">
+        <input type="text"
+               name="registrationNumber"
+               value="@Context.Request.Query["registrationNumber"]"
+               class="form-control"
+               placeholder="Registration number" />
+    </div>
+
+    <div class="col-md-4">
+        <button type="submit" class="btn btn-primary">
+            Search
+        </button>
+        <a asp-action="Index" class="btn btn-secondary ms-2">
+            Clear
+        </a>
+    </div>
+</form>
+
+
+<table class="table table-striped align-middle">
+    <thead>
+        <tr>
+            <th>Owner</th>
+            <th>Vehicle Type</th>
+            <th>Registration Number</th>
+            <th>Parking Spot</th>
+            <th>Parking Time</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var p in Model) {
+            var duration = DateTime.UtcNow - p.CheckInTime;
+
+            <tr>
+                <td>@(p.Vehicle.Owner?.UserName ?? "—")</td>
+                <td>@p.Vehicle.VehicleType.Name</td>
+                <td><code>@p.Vehicle.RegistrationNumber</code></td>
+                <td>@p.ParkingSpot.SpotNumber</td>
+                <td>@($"{(int)duration.TotalHours}h {duration.Minutes}m")</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (!Model.Any()) {
+    <div class="alert alert-info">No vehicles found.</div>
+}
