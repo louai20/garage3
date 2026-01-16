@@ -13,7 +13,7 @@ namespace garage3.Data
         public int Size { get; set; }
 
      
-        public bool IsOccupied { get; set; }
+        public bool IsBooked { get; set; }
 
         public ICollection<Parking> Parkings { get; set; } = new List<Parking>();
     }
