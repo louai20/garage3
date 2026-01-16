@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace garage3.Data
 {
@@ -6,13 +7,19 @@ namespace garage3.Data
     {
         public int Id { get; set; }
 
-      
+        [Required]
         public int SpotNumber { get; set; }
 
-     
+        [Required]
         public int Size { get; set; }
 
-     
+        // Admin reserved flag (for maintenance, work, etc.)
+        public bool IsAdminReserved { get; set; } = false;
+
+        // Reserved reason (for admin reserved spots)
+        [MaxLength(200)]
+        public string? ReservedReason { get; set; }
+
         public bool IsOccupied { get; set; }
 
         public ICollection<Parking> Parkings { get; set; } = new List<Parking>();

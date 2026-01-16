@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -45,17 +45,20 @@ namespace garage3.Data
             if (!await db.VehicleTypes.AnyAsync())
             {
                 db.VehicleTypes.AddRange(
-                    new VehicleType { Name = "MC", Size = 1 },
-                    new VehicleType { Name = "Bil", Size = 2 },
-                    new VehicleType { Name = "Buss", Size = 3 }
+                    new VehicleType { Name = "Motorcycle", Size = 1 },
+                    new VehicleType { Name = "Car", Size = 2 },
+                    new VehicleType { Name = "Bus", Size = 3 },
+                    new VehicleType { Name = "Truck", Size = 4 }
                 );
                 await db.SaveChangesAsync();
             }
 
+
             // Hämta typer (så vi kan koppla fordon)
-            var vtMc = await db.VehicleTypes.SingleAsync(x => x.Name == "MC");
-            var vtBil = await db.VehicleTypes.SingleAsync(x => x.Name == "Bil");
-            var vtBuss = await db.VehicleTypes.SingleAsync(x => x.Name == "Buss");
+            var vtMc = await db.VehicleTypes.SingleAsync(x => x.Name == "Motorcycle");
+            var vtBil = await db.VehicleTypes.SingleAsync(x => x.Name == "Car");
+            var vtBuss = await db.VehicleTypes.SingleAsync(x => x.Name == "Bus");
+            var vtTruck = await db.VehicleTypes.SingleAsync(x => x.Name == "Truck");
 
             // 4) ParkingSpots
             if (!await db.ParkingSpots.AnyAsync())
@@ -106,6 +109,7 @@ namespace garage3.Data
 
             await EnsureVehicleAsync(db, regNo: "XYZ999", ownerId: member2.Id, vehicleTypeId: vtBil.Id);
             await EnsureVehicleAsync(db, regNo: "BUS001", ownerId: member2.Id, vehicleTypeId: vtBuss.Id);
+            await EnsureVehicleAsync(db, regNo: "TRUCK01", ownerId: member2.Id, vehicleTypeId: vtTruck.Id);
 
             // (valfritt) Admin får också ett fordon
             await EnsureVehicleAsync(db, regNo: "ADM001", ownerId: admin.Id, vehicleTypeId: vtBil.Id);

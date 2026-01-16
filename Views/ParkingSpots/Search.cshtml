@@ -1,0 +1,225 @@
+@model garage3.Models.ParkingSpotSearchViewModel
+
+@{
+    ViewData["Title"] = "Search Available Parking Spots";
+}
+
+<div class="container mt-4">
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            @TempData["Message"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="mb-0 title">Search Available Parking Spots</h1>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form asp-action="Search" method="post" class="row g-3">
+                <div class="col-md-3">
+                    <label asp-for="Size" class="form-label"></label>
+                    <select asp-for="Size" class="form-select">
+                        <option value="">All Sizes</option>
+                        <option value="Small">Small</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Large">Large</option>
+                    </select>
+                    <span asp-validation-for="Size" class="text-danger"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="Location" class="form-label"></label>
+                    <input asp-for="Location" class="form-control text-muted" placeholder="Enter spot number" />
+                    <span asp-validation-for="Location" class="text-danger"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="VehicleTypeId" class="form-label"></label>
+                    <select asp-for="VehicleTypeId" class="form-select" asp-items="ViewBag.VehicleTypes">
+                        <option value="">All Vehicle Types</option>
+                    </select>
+                    <span asp-validation-for="VehicleTypeId" class="text-danger"></span>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (Model.AvailableSpots.Any())
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Summary</h5>
+                        <p class="card-text mb-1">Total: @Model.TotalSpots spots</p>
+                        <p class="card-text mb-0">
+                            <span class="@(Model.AvailableCount > 0 ? "text-success" : "text-danger")">
+                                Available: @Model.AvailableCount spots
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>
+                            @Html.DisplayNameFor(model => model.AvailableSpots[0].SpotNumber)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.AvailableSpots[0].SizeName)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.AvailableSpots[0].VehicleTypesAllowed)
+                        </th>
+                        <th class="text-center">
+                            @Html.DisplayNameFor(model => model.AvailableSpots[0].Status)
+                        </th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.AvailableSpots)
+                    {
+                        var rowClass = item.IsAdminReserved ? "table-warning" : (item.IsAvailable ? "table-success" : "table-danger");
+                        <tr class="@rowClass">
+                            <td>
+                                @Html.DisplayFor(modelItem => item.SpotNumber)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.SizeName)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.VehicleTypesAllowed)
+                            </td>
+                            <td class="text-center">
+                                @if (item.IsAdminReserved)
+                                {
+                                    <span class="badge bg-warning text-dark">Admin Reserved</span>
+                                    @if (!string.IsNullOrEmpty(item.ReservedReason))
+                                    {
+                                        <br />
+                                        <small class="text-muted">@item.ReservedReason</small>
+                                    }
+                                }
+                                else if (item.IsAvailable)
+                                {
+                                    <span class="badge bg-success">Available</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Occupied</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                @if (item.IsAvailable)
+                                {
+                                    @if (Model.VehicleTypeId.HasValue)
+                                    {
+                                        <a asp-controller="ParkingSpots" asp-action="ValidateSpot" asp-route-id="@item.Id" asp-route-vehicleTypeId="@Model.VehicleTypeId.Value"
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-car-front"></i> Park
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <a asp-controller="ParkedVehicles" asp-action="Create" asp-route-parkingSpotId="@item.Id"
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-car-front"></i> Park
+                                        </a>
+                                    }
+                                }
+                                else
+                                {
+                                    <a asp-controller="ParkingSpots" asp-action="Details" asp-route-id="@item.Id"
+                                       class="btn btn-sm btn-outline-info">
+                                        <i class="bi bi-info-circle"></i> Info
+                                    </a>
+                                }
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    @if (item.IsAdminReserved)
+                                    {
+                                        <form asp-action="Reserve" method="post" style="display: inline;">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-warning">
+                                                <i class="bi bi-unlock"></i> Unreserve
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <a href="#" onclick="reserveWithReason(@item.Id)" class="btn btn-sm btn-outline-warning">
+                                            <i class="bi bi-lock"></i> Reserve
+                                        </a>
+                                    }
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else if (Context.Request.Method == "GET" && (!string.IsNullOrWhiteSpace(Model.Size) || !string.IsNullOrWhiteSpace(Model.Location) || Model.VehicleTypeId.HasValue))
+    {
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle"></i>
+            No parking spots found matching your search criteria.
+        </div>
+    }
+</div>
+
+<!-- Modal for reservation reason -->
+<div class="modal fade" id="reserveModal" tabindex="-1" aria-labelledby="reserveModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reserveModalLabel">Reserve Parking Spot</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="reserveForm" method="post" action="@Url.Action("Reserve", "ParkingSpots")">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="reserveSpotId" />
+                    <div class="mb-3">
+                        <label for="reservedReason" class="form-label">Reservation Reason (Optional)</label>
+                        <input type="text" class="form-control" id="reservedReason" name="reservedReason" placeholder="Enter reason or leave empty">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning" onclick="submitReservation()">Reserve</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    
+    <script>
+        function reserveWithReason(spotId) {
+            document.getElementById('reserveSpotId').value = spotId;
+            document.getElementById('reservedReason').value = '';
+            new bootstrap.Modal(document.getElementById('reserveModal')).show();
+        }
+        
+        function submitReservation() {
+            document.getElementById('reserveForm').submit();
+        }
+    </script>
+}

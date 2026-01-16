@@ -12,7 +12,7 @@ using garage3.Data;
 namespace garage3.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260115111912_InitialCreate")]
+    [Migration("20260116160657_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -174,9 +174,6 @@ namespace garage3.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateOnly?>("DateOfBirth")
-                        .HasColumnType("date");
-
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -303,8 +300,15 @@ namespace garage3.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("IsAdminReserved")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsOccupied")
                         .HasColumnType("bit");
+
+                    b.Property<string>("ReservedReason")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<int>("Size")
                         .HasColumnType("int");
@@ -328,8 +332,20 @@ namespace garage3.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Color")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Manufacturer")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Model")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("OwnerId")
                         .IsRequired()

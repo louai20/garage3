@@ -1,0 +1,110 @@
+@model garage3.Models.ParkedVehicleDetailsVm
+
+@{
+    ViewData["Title"] = "Vehicle Details";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h3 class="mb-0"><i class="bi bi-info-circle"></i> Vehicle Details</h3>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">@Html.DisplayNameFor(m => m.RegistrationNumber)</dt>
+                        <dd class="col-sm-8"><strong>@Model.RegistrationNumber</strong></dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(m => m.VehicleTypeName)</dt>
+                        <dd class="col-sm-8">@Model.VehicleTypeName</dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(m => m.Manufacturer)</dt>
+                        <dd class="col-sm-8">@Model.Manufacturer</dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(m => m.Model)</dt>
+                        <dd class="col-sm-8">@Model.Model</dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(m => m.Color)</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge" style="background-color: @GetColorCode(Model.Color); color: white;">
+                                @Model.Color
+                            </span>
+                        </dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(m => m.OwnerName)</dt>
+                        <dd class="col-sm-8">@Model.OwnerName</dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(m => m.SpotNumber)</dt>
+                        <dd class="col-sm-8">@Model.SpotNumber</dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(m => m.SpotSize)</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-@(Model.SpotSize switch { 1 => "success", 2 => "warning", 3 => "danger", _ => "secondary"})">
+                                @Model.SpotSize
+                            </span>
+                        </dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(m => m.CheckInTime)</dt>
+                        <dd class="col-sm-8">@Model.CheckInTime.ToString("g")</dd>
+
+                        @if (Model.CheckOutTime.HasValue)
+                        {
+                            <dt class="col-sm-4">@Html.DisplayNameFor(m => m.CheckOutTime)</dt>
+                            <dd class="col-sm-8">@Model.CheckOutTime.Value.ToString("g")</dd>
+
+                            <dt class="col-sm-4">@Html.DisplayNameFor(m => m.Duration)</dt>
+                            <dd class="col-sm-8">
+                                @{
+                                    var duration = Model.Duration.Value;
+                                    if (duration.TotalHours >= 1)
+                                    {
+                                        @($"{(int)duration.TotalHours}h {duration.Minutes}m")
+                                    }
+                                    else
+                                    {
+                                        @($"{duration.Minutes}m {duration.Seconds}s")
+                                    }
+                                }
+                            </dd>
+                        }
+                    </dl>
+
+                    <div class="d-flex gap-2 mt-3">
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                            <i class="bi bi-pencil"></i> Edit
+                        </a>
+                        <a asp-action="UserParkedVehicles" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to List
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    private string GetColorCode(string? color)
+    {
+        if (string.IsNullOrEmpty(color)) return "#6c757d";
+        
+        var colorMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "Red", "#dc3545" },
+            { "Blue", "#0d6efd" },
+            { "Green", "#198754" },
+            { "Black", "#212529" },
+            { "White", "#f8f9fa" },
+            { "Silver", "#adb5bd" },
+            { "Gray", "#6c757d" },
+            { "Yellow", "#ffc107" },
+            { "Orange", "#fd7e14" },
+            { "Purple", "#6f42c1" },
+            { "Pink", "#d63384" },
+            { "Brown", "#795548" }
+        };
+
+        return colorMap.TryGetValue(color, out var code) ? code : "#6c757d";
+    }
+}
