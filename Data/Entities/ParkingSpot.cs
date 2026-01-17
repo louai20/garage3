@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace garage3.Data
 {
@@ -9,8 +10,8 @@ namespace garage3.Data
       
         public int SpotNumber { get; set; }
 
-     
-        public int Size { get; set; }
+		[Range(1, int.MaxValue, ErrorMessage = "Size must be at least 1.")]
+		public int Size { get; set; }
 
      
         public bool IsBooked { get; set; }
