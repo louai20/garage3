@@ -1,0 +1,58 @@
+﻿@model garage3.Data.ParkingSpot
+
+@{
+    ViewData["Title"] = "Delete";
+}
+
+
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+        <h1 class="mb-0">Delete parking spot</h1>
+        <div class="text-muted">This action cannot be undone</div>
+    </div>
+
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        Back to list
+    </a>
+
+
+
+</div>
+
+
+
+
+
+
+<div>
+    <h4>ParkingSpot</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.SpotNumber)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.SpotNumber)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Size)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Size)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.IsBooked)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.IsBooked)
+        </dd>
+    </dl>
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3"></div>
+
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="Id" />
+        <input type="submit" value="Delete" class="btn btn-danger" /> 
+
+    </form>
+</div>

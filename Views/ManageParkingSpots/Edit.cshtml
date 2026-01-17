@@ -1,0 +1,61 @@
+﻿@model garage3.Data.ParkingSpot
+
+@{
+    ViewData["Title"] = "Edit Parking Spot";
+}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+        <h1 class="mb-0">Edit parking spot</h1>
+        <div class="text-muted">Update spot number, size and booking status.</div>
+    </div>
+
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        Back to list
+    </a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form asp-action="Edit" class="needs-validation" novalidate>
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3"></div>
+
+            <input type="hidden" asp-for="Id" />
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="SpotNumber" class="form-label">Spot No.</label>
+                    <input asp-for="SpotNumber" class="form-control" />
+                    <span asp-validation-for="SpotNumber" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Size" class="form-label">Size</label>
+                    <input asp-for="Size" class="form-control" />
+                    <span asp-validation-for="Size" class="text-danger"></span>
+                    <div class="form-text">Example: 1 = Small, 2 = Medium, 3 = Large</div>
+                </div>
+
+                <div class="col-12">
+                    <div class="form-check mt-1">
+                        <input class="form-check-input" asp-for="IsBooked" />
+                        <label class="form-check-label" asp-for="IsBooked">
+                            Book this spot (block it for parking)
+                        </label>
+                    </div>
+                </div>
+
+                <div class="col-12 d-flex gap-2 mt-2">
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

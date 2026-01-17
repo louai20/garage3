@@ -71,13 +71,22 @@ namespace garage3.Data
                     {
                         SpotNumber = i,
                         Size = size,
-                        IsOccupied = false
+                        IsBooked = false
                     });
                 }
 
                 db.ParkingSpots.AddRange(spots);
                 await db.SaveChangesAsync();
             }
+
+            var spot1 = await db.ParkingSpots.FirstAsync(s => s.SpotNumber == 3);
+            spot1.IsBooked = true;
+
+            var spot2 = await db.ParkingSpots.FirstAsync(s => s.SpotNumber == 18);
+            spot2.IsBooked = true;
+
+            await db.SaveChangesAsync();
+
 
             // 5) Skapa några Member-users
             // Tips: userName=email gör login konsekvent
@@ -114,29 +123,49 @@ namespace garage3.Data
             // (valfritt) Admin får också ett fordon
             await EnsureVehicleAsync(db, regNo: "ADM001", ownerId: admin.Id, vehicleTypeId: vtBil.Id);
 
-            // 7) (VALFRITT) Skapa en aktiv parkering så du kan se Parkings-tabellen i UI
-            // Jag gör detta bara om det inte redan finns någon aktiv parkering.
+            // 7) Skapa ett par PARKERADE fordon (aktiva parkeringar)
+            // Upptagen = Parkings.CheckOutTime == null
+            // Bokad = ParkingSpot.IsBooked == true (adminblockerad, utan fordon)
             if (!await db.Parkings.AnyAsync(p => p.CheckOutTime == null))
             {
-                var firstFreeSpot = await db.ParkingSpots
+                // Hämta två fordon vi redan seedat
+                var v1 = await db.Vehicles.FirstAsync(v => v.RegistrationNumber == "ABC123"); // Bil (size 2)
+                var v2 = await db.Vehicles.FirstAsync(v => v.RegistrationNumber == "XYZ999"); // Bil (size 2)
+
+                // Hitta två lediga platser som INTE är bokade och som rymmer bil (size >= 2)
+                // Obs: vi skippar spot 3 och 18 som du bokat ovan.
+                var freeSpots = await db.ParkingSpots
                     .OrderBy(s => s.SpotNumber)
-                    .FirstAsync(s => !s.IsOccupied && s.Size >= vtBil.Size);
+                    .Where(s => !s.IsBooked && s.Size >= vtBil.Size)
+                    .Take(2)
+                    .ToListAsync();
 
-                var vehicleToPark = await db.Vehicles.FirstAsync(v => v.RegistrationNumber == "ABC123");
-
-                db.Parkings.Add(new Parking
+                if (freeSpots.Count >= 2)
                 {
-                    VehicleId = vehicleToPark.Id,
-                    ParkingSpotId = firstFreeSpot.Id,
-                    CheckInTime = DateTime.UtcNow,
-                    CheckOutTime = null,
-                    PricePerHour = 25m
-                });
+                    db.Parkings.AddRange(
+                        new Parking
+                        {
+                            VehicleId = v1.Id,
+                            ParkingSpotId = freeSpots[0].Id,
+                            CheckInTime = DateTime.UtcNow.AddHours(-3),
+                            CheckOutTime = null,
+                            PricePerHour = 25m
+                        },
+                        new Parking
+                        {
+                            VehicleId = v2.Id,
+                            ParkingSpotId = freeSpots[1].Id,
+                            CheckInTime = DateTime.UtcNow.AddHours(-1),
+                            CheckOutTime = null,
+                            PricePerHour = 25m
+                        }
+                    );
 
-                firstFreeSpot.IsOccupied = true;
-                await db.SaveChangesAsync();
+                    await db.SaveChangesAsync();
+                }
             }
         }
+
 
         private static async Task EnsureRoleAsync(RoleManager<IdentityRole> roleManager, string roleName)
         {
