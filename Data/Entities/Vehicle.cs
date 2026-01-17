@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
@@ -10,6 +10,15 @@ namespace garage3.Data
 
         [Required, MaxLength(12)]
         public string RegistrationNumber { get; set; } = string.Empty;
+
+        [MaxLength(20)]
+        public string? Color { get; set; }
+
+        [MaxLength(50)]
+        public string? Manufacturer { get; set; }
+
+        [MaxLength(50)]
+        public string? Model { get; set; }
 
         // FK -> AspNetUsers(ApplicationUser)
         [Required]

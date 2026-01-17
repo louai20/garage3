@@ -33,7 +33,6 @@ namespace garage3.Migrations
                     FirstName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     LastName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     PersonalNumber = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    DateOfBirth = table.Column<DateOnly>(type: "date", nullable: true),
                     MembershipType = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     MembershipValidUntil = table.Column<DateTime>(type: "datetime2", nullable: true),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -64,6 +63,8 @@ namespace garage3.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     SpotNumber = table.Column<int>(type: "int", nullable: false),
                     Size = table.Column<int>(type: "int", nullable: false),
+                    IsAdminReserved = table.Column<bool>(type: "bit", nullable: false),
+                    ReservedReason = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
                     IsOccupied = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
@@ -198,6 +199,9 @@ namespace garage3.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     RegistrationNumber = table.Column<string>(type: "nvarchar(12)", maxLength: 12, nullable: false),
+                    Color = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    Manufacturer = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    Model = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     OwnerId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     VehicleTypeId = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)

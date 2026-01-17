@@ -1,0 +1,71 @@
+@model garage3.Models.ParkedVehicleEditVm
+
+@{
+    ViewData["Title"] = "Edit Vehicle";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-warning">
+                    <h3 class="mb-0"><i class="bi bi-pencil"></i> Edit Vehicle Details</h3>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                        <input type="hidden" asp-for="Id" />
+
+                        <div class="mb-3">
+                            <label asp-for="RegistrationNumber" class="form-label"></label>
+                            <input asp-for="RegistrationNumber" class="form-control" />
+                            <span asp-validation-for="RegistrationNumber" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="VehicleTypeId" class="form-label"></label>
+                            <select asp-for="VehicleTypeId" class="form-select" asp-items="ViewBag.VehicleTypes">
+                                <option value="">-- Select Vehicle Type --</option>
+                            </select>
+                            <span asp-validation-for="VehicleTypeId" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Manufacturer" class="form-label"></label>
+                            <input asp-for="Manufacturer" class="form-control" />
+                            <span asp-validation-for="Manufacturer" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Model" class="form-label"></label>
+                            <input asp-for="Model" class="form-control" />
+                            <span asp-validation-for="Model" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Color" class="form-label"></label>
+                            <input asp-for="Color" class="form-control" />
+                            <span asp-validation-for="Color" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="bi bi-save"></i> Save Changes
+                            </button>
+                            <a asp-action="UserParkedVehicles" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
