@@ -10,6 +10,7 @@ namespace garage3.Data
         [Required]
         public int SpotNumber { get; set; }
 
+		[Range(1, int.MaxValue, ErrorMessage = "Size must be at least 1.")]
         [Required]
         public int Size { get; set; }
 
@@ -21,9 +22,6 @@ namespace garage3.Data
         public string? ReservedReason { get; set; }
 
         public bool IsOccupied { get; set; }
-		[Range(1, int.MaxValue, ErrorMessage = "Size must be at least 1.")]
-		public int Size { get; set; }
-
      
         public bool IsBooked { get; set; }
 
