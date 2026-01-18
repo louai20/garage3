@@ -1,4 +1,5 @@
 using garage3.Data;
+using garage3.Validation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,6 +24,16 @@ builder.Services
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+
+
+
+// Global validation for ApplicationUser
+// This will be invoked during user creation and updates
+// to enforce custom validation rules
+//
+// Check that FirstName and LastName are not the same
+builder.Services.AddScoped<IUserValidator<ApplicationUser>, ApplicationUserValidator>();
+
 
 var app = builder.Build();
 await SeedData.EnsureSeededAsync(app.Services);
