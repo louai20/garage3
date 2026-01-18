@@ -107,5 +107,52 @@ namespace garage3.Models
                 return IsAvailable ? "Available" : "Occupied";
             }
         }
+
+        // Vehicle details for occupied spots
+        [Display(Name = "Registration Number")]
+        public string? RegistrationNumber { get; set; }
+
+        [Display(Name = "Manufacturer")]
+        public string? Manufacturer { get; set; }
+
+        [Display(Name = "Model")]
+        public string? Model { get; set; }
+
+        [Display(Name = "Color")]
+        public string? Color { get; set; }
+
+        [Display(Name = "Check-in Time")]
+        public DateTime? CheckInTime { get; set; }
+
+        [Display(Name = "User ID")]
+        public string? UserId { get; set; }
+
+        [Display(Name = "Spot Size")]
+        public string SpotSizeName => Size switch
+        {
+            1 => "Small",
+            2 => "Small",
+            3 => "Medium",
+            4 => "Medium",
+            5 => "Medium",
+            6 => "Large",
+            7 => "Large",
+            8 => "Large",
+            9 => "Large",
+            10 => "Large",
+            11 => "Small",
+            12 => "Small",
+            13 => "Medium",
+            14 => "Medium",
+            15 => "Medium",
+            16 => "Large",
+            17 => "Large",
+            18 => "Large",
+            19 => "Large",
+            20 => "Large",
+            _ => "Unknown"
+        };
+
+        public int SpotSize => Size;
     }
 }

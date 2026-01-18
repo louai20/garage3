@@ -1,4 +1,7 @@
 @model garage3.Models.ParkingSpotSearchViewModel
+@using Microsoft.AspNetCore.Identity
+@using garage3.Data
+@inject UserManager<ApplicationUser> UserManager
 
 @{
     ViewData["Title"] = "Search Available Parking Spots";
@@ -140,10 +143,13 @@
                                 }
                                 else
                                 {
-                                    <a asp-controller="ParkingSpots" asp-action="Details" asp-route-id="@item.Id"
-                                       class="btn btn-sm btn-outline-info">
-                                        <i class="bi bi-info-circle"></i> Info
-                                    </a>
+                                    @if (User.IsInRole("Admin") || (User.Identity?.IsAuthenticated == true && UserManager.GetUserId(User) == item.UserId))
+                                    {
+                                        <a asp-controller="ParkingSpots" asp-action="Details" asp-route-id="@item.Id"
+                                           class="btn btn-sm btn-outline-info">
+                                            <i class="bi bi-info-circle"></i> Info
+                                        </a>
+                                    }
                                 }
                                 @if (User.IsInRole("Admin"))
                                 {

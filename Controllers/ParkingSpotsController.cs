@@ -110,7 +110,8 @@ namespace garage3.Controllers
                     VehicleTypeName = activeParking?.Vehicle?.VehicleType?.Name,
                     IsAdminReserved = ps.IsAdminReserved,
                     ReservedReason = ps.ReservedReason,
-                    IsAvailable = activeParking == null && !ps.IsAdminReserved
+                    IsAvailable = activeParking == null && !ps.IsAdminReserved,
+                    UserId = activeParking?.Vehicle?.OwnerId
                 };
             }).ToList();
 
@@ -147,6 +148,12 @@ namespace garage3.Controllers
                 return NotFound();
             }
 
+            // Get active parking with vehicle details
+            var activeParking = await _context.Parkings
+                .Include(p => p.Vehicle)
+                .ThenInclude(v => v.VehicleType)
+                .FirstOrDefaultAsync(p => p.ParkingSpotId == id && p.CheckOutTime == null);
+
             var model = new ParkingSpotViewModel
             {
                 Id = parkingSpot.Id,
@@ -154,7 +161,14 @@ namespace garage3.Controllers
                 Size = parkingSpot.Size,
                 IsAdminReserved = parkingSpot.IsAdminReserved,
                 ReservedReason = parkingSpot.ReservedReason,
-                IsAvailable = !parkingSpot.IsOccupied && !parkingSpot.IsAdminReserved
+                IsAvailable = !parkingSpot.IsOccupied && !parkingSpot.IsAdminReserved,
+                VehicleTypeName = activeParking?.Vehicle?.VehicleType?.Name,
+                RegistrationNumber = activeParking?.Vehicle?.RegistrationNumber,
+                Manufacturer = activeParking?.Vehicle?.Manufacturer,
+                Model = activeParking?.Vehicle?.Model,
+                Color = activeParking?.Vehicle?.Color,
+                CheckInTime = activeParking?.CheckInTime,
+                UserId = activeParking?.Vehicle?.OwnerId
             };
 
             return View(model);
