@@ -127,7 +127,17 @@ namespace garage3.Areas.Identity.Pages.Account
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             if (ModelState.IsValid)
             {
-                var user = new ApplicationUser
+
+				// Check if FirstName and LastName are the same (case-insensitive)
+				if (Input.FirstName?.Trim().Equals(Input.LastName?.Trim(), StringComparison.OrdinalIgnoreCase) == true) {
+					ModelState.AddModelError("Input.FirstName", "First name and last name cannot be the same.");
+					ModelState.AddModelError("Input.LastName", "First name and last name cannot be the same.");
+					return Page();
+				}
+
+
+
+				var user = new ApplicationUser
                 {
                     UserName = Input.Email,
                     Email = Input.Email,
