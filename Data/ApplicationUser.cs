@@ -22,6 +22,8 @@ namespace garage3.Data
 
         public DateTime? MembershipValidUntil { get; set; }
 
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+
         public ICollection<Vehicle> Vehicles { get; set; } = new List<Vehicle>();
 
     }

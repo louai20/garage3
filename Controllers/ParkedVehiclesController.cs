@@ -6,7 +6,7 @@ using garage3.Models;
 
 namespace garage3.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Member")]
     public class ParkedVehiclesController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -450,7 +450,7 @@ namespace garage3.Controllers
                 // Debug: Check if the parking spot was actually updated
                 var updatedSpot = await _context.ParkingSpots
                     .FirstOrDefaultAsync(ps => ps.Id == parkingSpotId.Value);
-                
+
                 TempData["Message"] = $"Vehicle {vehicle.RegistrationNumber} parked successfully in spot {parkingSpot.SpotNumber}. Spot occupied: {updatedSpot?.IsOccupied}";
                 return RedirectToAction("UserParkedVehicles");
             }

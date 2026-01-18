@@ -1,5 +1,4 @@
-﻿
-    namespace garage3.Models.ViewModels
+﻿namespace garage3.Models
     {
         public class GarageStatsVm
         {
