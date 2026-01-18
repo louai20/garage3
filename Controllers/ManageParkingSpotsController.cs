@@ -60,12 +60,20 @@ namespace garage3.Controllers
 		[ValidateAntiForgeryToken]
 		public async Task<IActionResult> Create([Bind("Id,SpotNumber,Size,IsBooked")] ParkingSpot parkingSpot)
 		{
-			if (ModelState.IsValid) {
-				_context.Add(parkingSpot);
-				await _context.SaveChangesAsync();
-				return RedirectToAction(nameof(Index));
+			if (!ModelState.IsValid)
+				return View(parkingSpot);
+
+			var exists = await _context.ParkingSpots
+				.AnyAsync(s => s.SpotNumber == parkingSpot.SpotNumber);
+
+			if (exists) {
+				ModelState.AddModelError("SpotNumber", "A parking spot with this number already exists.");
+				return View(parkingSpot);
 			}
-			return View(parkingSpot);
+
+			_context.Add(parkingSpot);
+			await _context.SaveChangesAsync();
+			return RedirectToAction(nameof(Index));
 		}
 
 		// GET: ManageParkingSpots/Edit/5
