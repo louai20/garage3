@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using garage3.Data;
 using garage3.Models;
@@ -14,6 +15,49 @@ namespace garage3.Controllers
         public ParkedVehiclesController(ApplicationDbContext context)
         {
             _context = context;
+        }
+
+        // GET: ParkedVehicles/RegisteredVehicles
+        public async Task<IActionResult> RegisteredVehicles()
+        {
+            // Get the current user ID
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                TempData["Message"] = "User not authenticated.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            // Get all vehicles registered by the current user (both parked and not parked)
+            var registeredVehicles = await _context.Vehicles
+                .Where(v => v.OwnerId == userId)
+                .Include(v => v.VehicleType)
+                .OrderBy(v => v.RegistrationNumber)
+                .ToListAsync();
+
+            // Get active parkings for the user's vehicles
+            var activeParkings = await _context.Parkings
+                .Where(p => p.CheckOutTime == null && p.Vehicle.OwnerId == userId)
+                .Include(p => p.ParkingSpot)
+                .ToDictionaryAsync(p => p.VehicleId, p => p);
+
+            // Create view models
+            var viewModels = registeredVehicles.Select(v => new RegisteredVehicleViewModel
+            {
+                Id = v.Id,
+                RegistrationNumber = v.RegistrationNumber,
+                VehicleTypeName = v.VehicleType.Name,
+                Color = v.Color,
+                Manufacturer = v.Manufacturer,
+                Model = v.Model,
+                IsParked = activeParkings.ContainsKey(v.Id),
+                SpotNumber = activeParkings.ContainsKey(v.Id) ? activeParkings[v.Id].ParkingSpot.SpotNumber : null,
+                SpotSize = activeParkings.ContainsKey(v.Id) ? activeParkings[v.Id].ParkingSpot.Size : null,
+                CheckInTime = activeParkings.ContainsKey(v.Id) ? activeParkings[v.Id].CheckInTime : null
+            }).ToList();
+
+            return View(viewModels);
         }
 
         // GET: ParkedVehicles/UserParkedVehicles
@@ -339,105 +383,38 @@ namespace garage3.Controllers
             return View(model);
         }
 
-        // GET: ParkedVehicles/Create
-        public async Task<IActionResult> Create(int? parkingSpotId)
+        // GET: ParkedVehicles/Register
+        public async Task<IActionResult> Register()
         {
             var vehicleTypes = await _context.VehicleTypes
                 .OrderBy(vt => vt.Name)
                 .ToListAsync();
 
-            var model = new ParkedVehicleCreateVm();
-
-            if (parkingSpotId.HasValue)
-            {
-                ViewBag.ParkingSpotId = parkingSpotId.Value;
-
-                // Get the parking spot to determine the allowed vehicle type
-                var parkingSpot = await _context.ParkingSpots
-                    .FirstOrDefaultAsync(ps => ps.Id == parkingSpotId.Value);
-
-                if (parkingSpot != null)
-                {
-                    // Find the vehicle type that matches the spot size
-                    var allowedVehicleType = vehicleTypes
-                        .FirstOrDefault(vt => vt.Size == parkingSpot.Size);
-
-                    if (allowedVehicleType != null)
-                    {
-                        // Pre-select the vehicle type
-                        model.VehicleTypeId = allowedVehicleType.Id;
-                        ViewBag.SpotSize = parkingSpot.Size;
-                        ViewBag.AllowedVehicleTypeName = allowedVehicleType.Name;
-                    }
-                    else
-                    {
-                        TempData["Message"] = $"No vehicle type found for spot size {parkingSpot.Size}. Please contact admin.";
-                        return RedirectToAction("Search", "ParkingSpots");
-                    }
-                }
-            }
-
             ViewBag.VehicleTypes = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(
-                vehicleTypes, "Id", "Name", model.VehicleTypeId);
+                vehicleTypes, "Id", "Name");
 
-            return View(model);
+            return View(new ParkedVehicleCreateVm());
         }
 
-        // POST: ParkedVehicles/Create
+        // POST: ParkedVehicles/Register
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(ParkedVehicleCreateVm createVm, int? parkingSpotId)
+        public async Task<IActionResult> Register(ParkedVehicleCreateVm createVm)
         {
             if (ModelState.IsValid)
             {
-                // Check if parking spot is provided
-                if (!parkingSpotId.HasValue)
-                {
-                    TempData["Message"] = "Please select a parking spot first.";
-                    return RedirectToAction("Search", "ParkingSpots");
-                }
-
-                // Check if parking spot is available
-                var parkingSpot = await _context.ParkingSpots
-                    .FirstOrDefaultAsync(ps => ps.Id == parkingSpotId.Value);
-
-                if (parkingSpot == null)
-                {
-                    TempData["Message"] = "Parking spot not found.";
-                    return RedirectToAction("Search", "ParkingSpots");
-                }
-
-                // Check if spot is already occupied
-                var activeParking = await _context.Parkings
-                    .Where(p => p.ParkingSpotId == parkingSpotId.Value && p.CheckOutTime == null)
-                    .FirstOrDefaultAsync();
-
-                if (activeParking != null)
-                {
-                    TempData["Message"] = "This parking spot is already occupied.";
-                    return RedirectToAction("Search", "ParkingSpots");
-                }
-
-                // Check if spot size is sufficient for the vehicle type
-                var vehicleType = await _context.VehicleTypes
-                    .FirstOrDefaultAsync(vt => vt.Id == createVm.VehicleTypeId);
-
-                if (vehicleType == null)
-                {
-                    TempData["Message"] = "Invalid vehicle type.";
-                    return RedirectToAction("Search", "ParkingSpots");
-                }
-
-                // Check if the vehicle type is allowed for this spot based on size comparison
-                // Vehicle can park if spot size >= vehicle type size
-                if (parkingSpot.Size < vehicleType.Size)
-                {
-                    TempData["Message"] = $"This spot (size {parkingSpot.Size}) is too small for {vehicleType.Name} (size {vehicleType.Size}).";
-                    return RedirectToAction("Search", "ParkingSpots");
-                }
-
                 // Get the current user
                 var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+                // Check if vehicle already exists
+                var existingVehicle = await _context.Vehicles
+                    .FirstOrDefaultAsync(v => v.RegistrationNumber.ToUpper() == createVm.LicensePlate.Trim().ToUpper());
+
+                if (existingVehicle != null)
+                {
+                    TempData["Message"] = $"Vehicle with registration {createVm.LicensePlate.Trim().ToUpper()} already exists.";
+                    return RedirectToAction("Register");
+                }
 
                 // Create the vehicle
                 var vehicle = new Vehicle
@@ -447,36 +424,14 @@ namespace garage3.Controllers
                     Color = createVm.Color,
                     Manufacturer = createVm.Manufacturer,
                     Model = createVm.Model,
-                    OwnerId = userId ?? "1" // Use logged-in user or default
+                    OwnerId = userId ?? "1"
                 };
 
                 _context.Vehicles.Add(vehicle);
                 await _context.SaveChangesAsync();
 
-                // Create the parking record
-                var parking = new Parking
-                {
-                    VehicleId = vehicle.Id,
-                    ParkingSpotId = parkingSpotId.Value,
-                    CheckInTime = DateTime.Now,
-                    CheckOutTime = null
-                };
-
-                _context.Parkings.Add(parking);
-
-                // Update parking spot status
-                parkingSpot.IsOccupied = true;
-                // Explicitly mark the parking spot as modified
-                _context.Entry(parkingSpot).Property(p => p.IsOccupied).IsModified = true;
-
-                await _context.SaveChangesAsync();
-
-                // Debug: Check if the parking spot was actually updated
-                var updatedSpot = await _context.ParkingSpots
-                    .FirstOrDefaultAsync(ps => ps.Id == parkingSpotId.Value);
-
-                TempData["Message"] = $"Vehicle {vehicle.RegistrationNumber} parked successfully in spot {parkingSpot.SpotNumber}. Spot occupied: {updatedSpot?.IsOccupied}";
-                return RedirectToAction("UserParkedVehicles");
+                TempData["Message"] = $"Vehicle {vehicle.RegistrationNumber} registered successfully.";
+                return RedirectToAction("RegisteredVehicles");
             }
 
             // Repopulate ViewBag if validation fails
@@ -485,9 +440,275 @@ namespace garage3.Controllers
                 .ToListAsync();
 
             ViewBag.VehicleTypes = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(
-                vehicleTypes, "Id", "Name");
+                vehicleTypes, "Id", "Name", createVm.VehicleTypeId);
 
             return View(createVm);
+        }
+
+        // GET: ParkedVehicles/Create
+        public async Task<IActionResult> Create(int? parkingSpotId)
+        {
+            if (!parkingSpotId.HasValue)
+            {
+                TempData["Message"] = "Please select a parking spot first.";
+                return RedirectToAction("Search", "ParkingSpots");
+            }
+
+            // Get the current user ID
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+            // Get all vehicles owned by the current user that are NOT currently parked
+            var activeParkings = await _context.Parkings
+                .Where(p => p.CheckOutTime == null)
+                .Select(p => p.VehicleId)
+                .ToListAsync();
+
+            var userVehicles = await _context.Vehicles
+                .Where(v => v.OwnerId == userId && !activeParkings.Contains(v.Id))
+                .Include(v => v.VehicleType)
+                .OrderBy(v => v.RegistrationNumber)
+                .ToListAsync();
+
+            // Get the parking spot to determine the allowed vehicle type
+            var parkingSpot = await _context.ParkingSpots
+                .FirstOrDefaultAsync(ps => ps.Id == parkingSpotId.Value);
+
+            if (parkingSpot == null)
+            {
+                TempData["Message"] = "Parking spot not found.";
+                return RedirectToAction("Search", "ParkingSpots");
+            }
+
+            // Find the vehicle type that matches the spot size
+            var allowedVehicleType = await _context.VehicleTypes
+                .FirstOrDefaultAsync(vt => vt.Size == parkingSpot.Size);
+
+            if (allowedVehicleType == null)
+            {
+                TempData["Message"] = $"No vehicle type found for spot size {parkingSpot.Size}. Please contact admin.";
+                return RedirectToAction("Search", "ParkingSpots");
+            }
+
+            // Filter vehicles to only show those that match the spot's allowed type
+            var allowedVehicles = userVehicles
+                .Where(v => v.VehicleTypeId == allowedVehicleType.Id)
+                .ToList();
+
+            ViewBag.ParkingSpotId = parkingSpotId.Value;
+            ViewBag.SpotSize = parkingSpot.Size;
+            ViewBag.AllowedVehicleTypeName = allowedVehicleType.Name;
+            ViewBag.AllowedVehicleTypeId = allowedVehicleType.Id;
+
+            // Create view model with vehicle selection
+            var model = new ParkedVehicleSelectVm
+            {
+                ParkingSpotId = parkingSpotId.Value,
+                AllowedVehicleTypeId = allowedVehicleType.Id,
+                AllowedVehicleTypeName = allowedVehicleType.Name,
+                UserVehicles = allowedVehicles.Select(v => new SelectListItem
+                {
+                    Value = v.Id.ToString(),
+                    Text = $"{v.RegistrationNumber} - {v.Manufacturer} {v.Model} ({v.Color})"
+                }).ToList()
+            };
+
+            return View(model);
+        }
+
+        // POST: ParkedVehicles/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(ParkedVehicleSelectVm selectVm)
+        {
+            if (ModelState.IsValid)
+            {
+                // Check if parking spot is provided
+                if (selectVm.ParkingSpotId <= 0)
+                {
+                    TempData["Message"] = "Please select a parking spot first.";
+                    return RedirectToAction("Search", "ParkingSpots");
+                }
+
+                // Check if parking spot is available
+                var parkingSpot = await _context.ParkingSpots
+                    .FirstOrDefaultAsync(ps => ps.Id == selectVm.ParkingSpotId);
+
+                if (parkingSpot == null)
+                {
+                    TempData["Message"] = "Parking spot not found.";
+                    return RedirectToAction("Search", "ParkingSpots");
+                }
+
+                // Check if spot is already occupied
+                var activeParking = await _context.Parkings
+                    .Where(p => p.ParkingSpotId == selectVm.ParkingSpotId && p.CheckOutTime == null)
+                    .FirstOrDefaultAsync();
+
+                if (activeParking != null)
+                {
+                    TempData["Message"] = "This parking spot is already occupied.";
+                    return RedirectToAction("Search", "ParkingSpots");
+                }
+
+                // Get the selected vehicle
+                var vehicle = await _context.Vehicles
+                    .Include(v => v.VehicleType)
+                    .FirstOrDefaultAsync(v => v.Id == selectVm.SelectedVehicleId);
+
+                if (vehicle == null)
+                {
+                    TempData["Message"] = "Vehicle not found.";
+                    return RedirectToAction("Search", "ParkingSpots");
+                }
+
+                // Get the current user
+                var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+                // Check if the current user owns this vehicle
+                if (vehicle.OwnerId != userId)
+                {
+                    TempData["Message"] = "You do not have permission to park this vehicle.";
+                    return RedirectToAction("Search", "ParkingSpots");
+                }
+
+                // Check if the vehicle type is allowed for this spot
+                if (parkingSpot.Size < vehicle.VehicleType.Size)
+                {
+                    TempData["Message"] = $"This spot (size {parkingSpot.Size}) is too small for {vehicle.VehicleType.Name} (size {vehicle.VehicleType.Size}).";
+                    return RedirectToAction("Search", "ParkingSpots");
+                }
+
+                // Create the parking record
+                var parking = new Parking
+                {
+                    VehicleId = vehicle.Id,
+                    ParkingSpotId = selectVm.ParkingSpotId,
+                    CheckInTime = DateTime.Now,
+                    CheckOutTime = null
+                };
+
+                _context.Parkings.Add(parking);
+
+                // Update parking spot status
+                parkingSpot.IsOccupied = true;
+                _context.Entry(parkingSpot).Property(p => p.IsOccupied).IsModified = true;
+
+                await _context.SaveChangesAsync();
+
+                TempData["Message"] = $"Vehicle {vehicle.RegistrationNumber} parked successfully in spot {parkingSpot.SpotNumber}.";
+                return RedirectToAction("UserParkedVehicles");
+            }
+
+            return View(selectVm);
+        }
+
+        // GET: ParkedVehicles/Delete/5
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            // Get the current user ID
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                TempData["Message"] = "User not authenticated.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            // Get the vehicle
+            var vehicle = await _context.Vehicles
+                .Include(v => v.Owner)
+                .Include(v => v.VehicleType)
+                .FirstOrDefaultAsync(v => v.Id == id);
+
+            if (vehicle == null)
+            {
+                TempData["Message"] = "Vehicle not found.";
+                return RedirectToAction("RegisteredVehicles");
+            }
+
+            // Check if the current user owns this vehicle
+            if (vehicle.OwnerId != userId)
+            {
+                TempData["Message"] = "You do not have permission to delete this vehicle.";
+                return RedirectToAction("RegisteredVehicles");
+            }
+
+            // Check if the vehicle is currently parked
+            var activeParking = await _context.Parkings
+                .Where(p => p.VehicleId == id && p.CheckOutTime == null)
+                .FirstOrDefaultAsync();
+
+            if (activeParking != null)
+            {
+                TempData["Message"] = $"Cannot delete {vehicle.RegistrationNumber} because it is currently parked. Please checkout first.";
+                return RedirectToAction("RegisteredVehicles");
+            }
+
+            return View(vehicle);
+        }
+
+        // POST: ParkedVehicles/Delete/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            // Get the current user ID
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                TempData["Message"] = "User not authenticated.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            // Get the vehicle
+            var vehicle = await _context.Vehicles.FindAsync(id);
+
+            if (vehicle == null)
+            {
+                TempData["Message"] = "Vehicle not found.";
+                return RedirectToAction("RegisteredVehicles");
+            }
+
+            // Check if the current user owns this vehicle
+            if (vehicle.OwnerId != userId)
+            {
+                TempData["Message"] = "You do not have permission to delete this vehicle.";
+                return RedirectToAction("RegisteredVehicles");
+            }
+
+            // Check if the vehicle is currently parked
+            var activeParking = await _context.Parkings
+                .Where(p => p.VehicleId == id && p.CheckOutTime == null)
+                .FirstOrDefaultAsync();
+
+            if (activeParking != null)
+            {
+                TempData["Message"] = $"Cannot delete {vehicle.RegistrationNumber} because it is currently parked. Please checkout first.";
+                return RedirectToAction("RegisteredVehicles");
+            }
+
+            // Get all parking records for this vehicle and remove them
+            var vehicleParkings = await _context.Parkings
+                .Where(p => p.VehicleId == id)
+                .ToListAsync();
+
+            if (vehicleParkings.Any())
+            {
+                _context.Parkings.RemoveRange(vehicleParkings);
+            }
+
+            // Delete the vehicle
+            _context.Vehicles.Remove(vehicle);
+            await _context.SaveChangesAsync();
+
+            TempData["Message"] = $"Vehicle {vehicle.RegistrationNumber} deleted successfully.";
+            return RedirectToAction("RegisteredVehicles");
         }
     }
 }

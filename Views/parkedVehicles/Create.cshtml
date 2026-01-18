@@ -1,91 +1,61 @@
-@model garage3.Models.ParkedVehicleCreateVm
+@model garage3.Models.ParkedVehicleSelectVm
+
+@{
+    ViewData["Title"] = "Park Vehicle";
+}
 
 <div class="container mt-4">
     <div class="row justify-content-center">
-        <div class="col-lg-8">
-
-            <h1 class="mb-4 text-center title">Park Vehicle</h1>
-
-            <form asp-action="Create" method="post" class="card p-4 shadow-sm">
-                @if (ViewBag.ParkingSpotId != null)
-                {
-                    <input type="hidden" name="parkingSpotId" value="@ViewBag.ParkingSpotId" />
-                    
-                    <!-- Show spot information -->
-                    <div class="alert alert-info mb-4">
-                        <strong>Parking Spot Information:</strong><br />
-                        Spot ID: @ViewBag.ParkingSpotId | 
-                        Allowed Vehicle Type: <strong>@ViewBag.AllowedVehicleTypeName</strong> (Size: @ViewBag.SpotSize)
-                    </div>
-                }
-                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
-                <!-- Row 1 -->
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label asp-for="VehicleTypeId" class="form-label">Vehicle Type</label>
-                        @if (ViewBag.ParkingSpotId != null)
-                        {
-                            <!-- Show pre-selected vehicle type as read-only -->
-                            <input type="text" class="form-control" value="@ViewBag.AllowedVehicleTypeName" readonly />
-                            <input type="hidden" asp-for="VehicleTypeId" />
-                            <small class="text-muted">This spot only accepts @ViewBag.AllowedVehicleTypeName</small>
-                        }
-                        else
-                        {
-                            <select asp-for="VehicleTypeId"
-                                    asp-items="ViewBag.VehicleTypes"
-                                    class="form-select">
-                                <option value="">-- Select Type --</option>
-                            </select>
-                        }
-                        <span asp-validation-for="VehicleTypeId" class="text-danger"></span>
-                    </div>
-
-                    <div class="col-md-4 mb-3">
-                        <label asp-for="LicensePlate" class="form-label">License Plate</label>
-                        <input asp-for="LicensePlate" class="form-control" />
-                        <span asp-validation-for="LicensePlate" class="text-danger"></span>
-                    </div>
-
-                    <div class="col-md-4 mb-3">
-                        <label asp-for="Color" class="form-label">Color</label>
-                        <input asp-for="Color" class="form-control" />
-                        <span asp-validation-for="Color" class="text-danger"></span>
-                    </div>
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Park Vehicle</h3>
                 </div>
-
-                <!-- Row 2 -->
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="Manufacturer" class="form-label">Manufacturer</label>
-                        <input asp-for="Manufacturer" class="form-control" />
-                        <span asp-validation-for="Manufacturer" class="text-danger"></span>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <strong>Spot Size:</strong> @ViewBag.SpotSize<br />
+                        <strong>Allowed Vehicle Type:</strong> @ViewBag.AllowedVehicleTypeName
                     </div>
 
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="Model" class="form-label">Model</label>
-                        <input asp-for="Model" class="form-control" />
-                        <span asp-validation-for="Model" class="text-danger"></span>
-                    </div>
+                    @if (Model.UserVehicles.Count == 0)
+                    {
+                        <div class="alert alert-warning">
+                            <p>You don't have any registered vehicles of type <strong>@ViewBag.AllowedVehicleTypeName</strong>.</p>
+                            <a asp-action="Register" class="btn btn-success">Register New Vehicle</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <form asp-action="Create" method="post">
+                            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                            <input type="hidden" asp-for="ParkingSpotId" value="@ViewBag.ParkingSpotId" />
+                            <input type="hidden" asp-for="AllowedVehicleTypeId" value="@ViewBag.AllowedVehicleTypeId" />
+                            <input type="hidden" asp-for="AllowedVehicleTypeName" value="@ViewBag.AllowedVehicleTypeName" />
+
+                            <div class="mb-3">
+                                <label asp-for="SelectedVehicleId" class="form-label">Select Your Vehicle</label>
+                                <select asp-for="SelectedVehicleId" class="form-select" asp-items="Model.UserVehicles">
+                                    <option value="">-- Select a Vehicle --</option>
+                                </select>
+                                <span asp-validation-for="SelectedVehicleId" class="text-danger"></span>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">Park Vehicle</button>
+                                <a asp-action="Register" class="btn btn-success">Register New Vehicle</a>
+                                <a asp-action="Search" asp-controller="ParkingSpots" class="btn btn-secondary">Cancel</a>
+                            </div>
+                        </form>
+                    }
                 </div>
-
-                <div class="d-flex justify-content-between mt-3">
-                    <div>
-                        <button type="submit" class="btn btn-primary">Park Vehicle</button>
-                        @if (ViewBag.ParkingSpotId != null)
-                        {
-                            <a asp-action="Search" asp-controller="ParkingSpots" class="btn btn-outline-secondary ms-2">Choose Other Spot</a>
-                        }
-                    </div>
-                    <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
-                </div>
-            </form>
-
+            </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

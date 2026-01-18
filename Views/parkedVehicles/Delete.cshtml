@@ -1,0 +1,53 @@
+@model garage3.Data.Vehicle
+
+@{
+    ViewData["Title"] = "Delete Vehicle";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Confirm Vehicle Deletion</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <h5 class="alert-heading">Warning!</h5>
+                        <p>Are you sure you want to delete the following vehicle?</p>
+                        <p class="mb-0">This action cannot be undone.</p>
+                    </div>
+
+                    <dl class="row">
+                        <dt class="col-sm-4">Registration Number:</dt>
+                        <dd class="col-sm-8"><strong>@Model.RegistrationNumber</strong></dd>
+
+                        <dt class="col-sm-4">Vehicle Type:</dt>
+                        <dd class="col-sm-8">@Model.VehicleType?.Name</dd>
+
+                        <dt class="col-sm-4">Manufacturer:</dt>
+                        <dd class="col-sm-8">@Model.Manufacturer</dd>
+
+                        <dt class="col-sm-4">Model:</dt>
+                        <dd class="col-sm-8">@Model.Model</dd>
+
+                        <dt class="col-sm-4">Color:</dt>
+                        <dd class="col-sm-8">@Model.Color</dd>
+                    </dl>
+
+                    <form asp-action="DeleteConfirmed" method="post" class="mt-4">
+                        <input type="hidden" asp-for="Id" />
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Delete Vehicle
+                            </button>
+                            <a asp-action="RegisteredVehicles" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
