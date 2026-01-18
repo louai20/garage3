@@ -1,17 +1,17 @@
 ﻿using garage3.Data;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System.Text.RegularExpressions;
 
 namespace garage3.Validation
 {
 	public class ApplicationUserValidator : IUserValidator<ApplicationUser>
 	{
-
 		// Regex to validate Swedish personal number format YYYYMMDD-XXXX
 		private static readonly Regex PersonalNumberRegex =
 			new(@"^\d{8}-\d{4}$", RegexOptions.Compiled);
 
-		public Task<IdentityResult> ValidateAsync(
+		public async Task<IdentityResult> ValidateAsync(
 			UserManager<ApplicationUser> manager,
 			ApplicationUser user)
 		{
@@ -19,12 +19,36 @@ namespace garage3.Validation
 
 			ValidateNames(user, errors);
 			ValidatePersonalNumber(user, errors);
+			await ValidateUniquePersonalNumberAsync(manager, user, errors);
 
 			return errors.Count == 0
-				? Task.FromResult(IdentityResult.Success)
-				: Task.FromResult(IdentityResult.Failed(errors.ToArray()));
+				? IdentityResult.Success
+				: IdentityResult.Failed(errors.ToArray());
 		}
 
+		private static async Task ValidateUniquePersonalNumberAsync(
+	UserManager<ApplicationUser> manager,
+	ApplicationUser user,
+	List<IdentityError> errors)
+		{
+			var personalNumber = user.PersonalNumber?.Trim();
+
+			if (string.IsNullOrWhiteSpace(personalNumber))
+				return;
+
+			if (!HasValidPersonalNumberFormat(personalNumber))
+				return;
+
+			var exists = await manager.Users.AnyAsync(u =>
+				u.PersonalNumber == personalNumber &&
+				u.Id != user.Id);
+
+			if (exists) {
+				errors.Add(CreateError(
+					"PersonalNumberNotUnique",
+					"Person number already exists."));
+			}
+		}
 
 		private static void ValidateNames(ApplicationUser user, List<IdentityError> errors)
 		{
