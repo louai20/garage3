@@ -6,7 +6,7 @@ using garage3.Models;
 
 namespace garage3.Controllers
 {
-    [Authorize(Roles = "Member")]
+    [Authorize(Roles = "Admin,Member")]
     public class ParkedVehiclesController : Controller
     {
         private readonly ApplicationDbContext _context;
