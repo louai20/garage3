@@ -1,0 +1,52 @@
+﻿@model IEnumerable<garage3.Data.Parking>
+
+@{
+    ViewData["Title"] = "Parked vehicles overview";
+}
+
+<h1>Parked vehicles overview</h1>
+
+<form method="get" class="mb-3">
+    <div>
+        <label>Vehicle type</label>
+        <input name="vehicleType" value="@ViewBag.VehicleType" />
+    </div>
+    <div>
+        <label>Registration number</label>
+        <input name="regNo" value="@ViewBag.RegNo" />
+    </div>
+    <button type="submit">Search</button>
+    <a asp-action="Index">Clear</a>
+</form>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Owner</th>
+            <th>Membership</th>
+            <th>Vehicle type</th>
+            <th>Reg no</th>
+            <th>Spot</th>
+            <th>Parked since</th>
+            <th>Parked time</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var p in Model) {
+            <tr>
+                <td>@p.Vehicle.Owner.FirstName @p.Vehicle.Owner.LastName</td>
+                <td>@(p.Vehicle.Owner.MembershipType ?? "-")</td>
+                <td>@p.Vehicle.VehicleType.Name</td>
+                <td>@p.Vehicle.RegistrationNumber</td>
+                <td>@p.ParkingSpot.SpotNumber</td>
+                <td>@p.CheckInTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                <td>
+                    @{
+                        var duration = DateTime.UtcNow - p.CheckInTime;
+                    }
+                    @(Math.Floor(duration.TotalHours)) h @duration.Minutes min
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
