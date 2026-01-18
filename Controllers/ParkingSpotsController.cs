@@ -6,7 +6,7 @@ using garage3.Models;
 
 namespace garage3.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Member")]
     public class ParkingSpotsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -85,11 +85,11 @@ namespace garage3.Controllers
             {
                 var vehicleType = await _context.VehicleTypes
                     .FirstOrDefaultAsync(vt => vt.Id == vehicleTypeId.Value);
-                
+
                 if (vehicleType != null)
                 {
                     // Filter spots based on vehicle type name
-                    allSpots = allSpots.Where(ps => 
+                    allSpots = allSpots.Where(ps =>
                     {
                         var allowedTypes = GetVehicleTypesAllowed(ps.SpotNumber);
                         return allowedTypes.Contains(vehicleType.Name);
@@ -99,7 +99,7 @@ namespace garage3.Controllers
 
             // Create view model
             model.TotalSpots = allSpots.Count;
-            model.AvailableSpots = allSpots.Select(ps => 
+            model.AvailableSpots = allSpots.Select(ps =>
             {
                 var activeParking = activeParkings.FirstOrDefault(p => p.ParkingSpotId == ps.Id);
                 return new ParkingSpotViewModel
@@ -125,10 +125,10 @@ namespace garage3.Controllers
         public IActionResult Search(ParkingSpotSearchViewModel model)
         {
             // Redirect to GET method with parameters
-            return RedirectToAction("Search", new { 
-                size = model.Size, 
+            return RedirectToAction("Search", new {
+                size = model.Size,
                 location = model.Location,
-                vehicleTypeId = model.VehicleTypeId 
+                vehicleTypeId = model.VehicleTypeId
             });
         }
 
@@ -199,8 +199,8 @@ namespace garage3.Controllers
 
             // Reserve the spot
             parkingSpot.IsAdminReserved = true;
-            parkingSpot.ReservedReason = string.IsNullOrWhiteSpace(reservedReason) 
-                ? "Reserved by Admin" 
+            parkingSpot.ReservedReason = string.IsNullOrWhiteSpace(reservedReason)
+                ? "Reserved by Admin"
                 : reservedReason;
 
             await _context.SaveChangesAsync();
@@ -246,7 +246,7 @@ namespace garage3.Controllers
             Console.WriteLine($"[DEBUG] Validating spot {parkingSpot.SpotNumber} (size {parkingSpot.Size}) for vehicle type {vehicleType.Name} (size {vehicleType.Size})");
             Console.WriteLine($"[DEBUG] Validation check: {parkingSpot.Size} < {vehicleType.Size} = {parkingSpot.Size < vehicleType.Size}");
             Console.WriteLine($"[DEBUG] Spot size type: {parkingSpot.Size.GetType()}, Vehicle type size: {vehicleType.Size.GetType()}");
-            
+
             if (parkingSpot.Size < vehicleType.Size)
             {
                 Console.WriteLine($"[DEBUG] Validation FAILED - Spot too small");

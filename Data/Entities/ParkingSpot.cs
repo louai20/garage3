@@ -12,6 +12,7 @@ namespace garage3.Data
 
 		[Range(1, int.MaxValue, ErrorMessage = "Size must be at least 1.")]
         [Required]
+        [Range(1, int.MaxValue, ErrorMessage = "Size must be at least 1.")]
         public int Size { get; set; }
 
         // Admin reserved flag (for maintenance, work, etc.)
