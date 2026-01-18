@@ -10,7 +10,6 @@ namespace garage3.Data
         [Required]
         public int SpotNumber { get; set; }
 
-		[Range(1, int.MaxValue, ErrorMessage = "Size must be at least 1.")]
         [Required]
         [Range(1, int.MaxValue, ErrorMessage = "Size must be at least 1.")]
         public int Size { get; set; }

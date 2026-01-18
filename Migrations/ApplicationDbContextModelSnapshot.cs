@@ -171,6 +171,9 @@ namespace garage3.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -300,8 +303,10 @@ namespace garage3.Migrations
                     b.Property<bool>("IsAdminReserved")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsOccupied")
                     b.Property<bool>("IsBooked")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsOccupied")
                         .HasColumnType("bit");
 
                     b.Property<string>("ReservedReason")

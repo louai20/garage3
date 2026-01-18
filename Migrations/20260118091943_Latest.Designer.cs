@@ -12,8 +12,8 @@ using garage3.Data;
 namespace garage3.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260116160657_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260118091943_Latest")]
+    partial class Latest
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -174,6 +174,9 @@ namespace garage3.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -301,6 +304,9 @@ namespace garage3.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("IsAdminReserved")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsBooked")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsOccupied")

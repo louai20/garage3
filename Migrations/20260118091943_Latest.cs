@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace garage3.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Latest : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -35,6 +35,7 @@ namespace garage3.Migrations
                     PersonalNumber = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     MembershipType = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     MembershipValidUntil = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -65,7 +66,8 @@ namespace garage3.Migrations
                     Size = table.Column<int>(type: "int", nullable: false),
                     IsAdminReserved = table.Column<bool>(type: "bit", nullable: false),
                     ReservedReason = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
-                    IsOccupied = table.Column<bool>(type: "bit", nullable: false)
+                    IsOccupied = table.Column<bool>(type: "bit", nullable: false),
+                    IsBooked = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
