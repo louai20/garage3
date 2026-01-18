@@ -10,6 +10,13 @@
                 @if (ViewBag.ParkingSpotId != null)
                 {
                     <input type="hidden" name="parkingSpotId" value="@ViewBag.ParkingSpotId" />
+                    
+                    <!-- Show spot information -->
+                    <div class="alert alert-info mb-4">
+                        <strong>Parking Spot Information:</strong><br />
+                        Spot ID: @ViewBag.ParkingSpotId | 
+                        Allowed Vehicle Type: <strong>@ViewBag.AllowedVehicleTypeName</strong> (Size: @ViewBag.SpotSize)
+                    </div>
                 }
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
@@ -17,11 +24,21 @@
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label asp-for="VehicleTypeId" class="form-label">Vehicle Type</label>
-                        <select asp-for="VehicleTypeId"
-                                asp-items="ViewBag.VehicleTypes"
-                                class="form-select">
-                            <option value="">-- Select Type --</option>
-                        </select>
+                        @if (ViewBag.ParkingSpotId != null)
+                        {
+                            <!-- Show pre-selected vehicle type as read-only -->
+                            <input type="text" class="form-control" value="@ViewBag.AllowedVehicleTypeName" readonly />
+                            <input type="hidden" asp-for="VehicleTypeId" />
+                            <small class="text-muted">This spot only accepts @ViewBag.AllowedVehicleTypeName</small>
+                        }
+                        else
+                        {
+                            <select asp-for="VehicleTypeId"
+                                    asp-items="ViewBag.VehicleTypes"
+                                    class="form-select">
+                                <option value="">-- Select Type --</option>
+                            </select>
+                        }
                         <span asp-validation-for="VehicleTypeId" class="text-danger"></span>
                     </div>
 
@@ -54,7 +71,13 @@
                 </div>
 
                 <div class="d-flex justify-content-between mt-3">
-                    <button type="submit" class="btn btn-primary">Park Vehicle</button>
+                    <div>
+                        <button type="submit" class="btn btn-primary">Park Vehicle</button>
+                        @if (ViewBag.ParkingSpotId != null)
+                        {
+                            <a asp-action="Search" asp-controller="ParkingSpots" class="btn btn-outline-secondary ms-2">Choose Other Spot</a>
+                        }
+                    </div>
                     <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
                 </div>
             </form>

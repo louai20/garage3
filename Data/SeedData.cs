@@ -66,7 +66,7 @@ namespace garage3.Data
                 var spots = new List<ParkingSpot>();
                 for (int i = 1; i <= 20; i++)
                 {
-                    int size = i <= 6 ? 1 : i <= 16 ? 2 : 3;
+                    int size = i <= 6 ? 1 : i <= 15 ? 2 : i <= 18 ? 3 : 4;
                     spots.Add(new ParkingSpot
                     {
                         SpotNumber = i,

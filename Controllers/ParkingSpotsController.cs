@@ -88,20 +88,28 @@ namespace garage3.Controllers
 
                 if (vehicleType != null)
                 {
-                    // Filter spots based on vehicle type name
-                    allSpots = allSpots.Where(ps =>
-                    {
-                        var allowedTypes = GetVehicleTypesAllowed(ps.SpotNumber);
-                        return allowedTypes.Contains(vehicleType.Name);
-                    }).ToList();
+                    // Filter spots based on size comparison
+                    // Vehicle can park if spot size >= vehicle type size
+                    allSpots = allSpots.Where(ps => ps.Size >= vehicleType.Size).ToList();
                 }
             }
+
+            // Get all vehicle types for populating VehicleTypesAllowed
+            var allVehicleTypes = await _context.VehicleTypes.ToListAsync();
 
             // Create view model
             model.TotalSpots = allSpots.Count;
             model.AvailableSpots = allSpots.Select(ps =>
             {
                 var activeParking = activeParkings.FirstOrDefault(p => p.ParkingSpotId == ps.Id);
+                
+                // Get the single vehicle type that can fit in this spot based on size
+                // Each spot size maps to exactly one vehicle type
+                var allowedType = allVehicleTypes
+                    .Where(vt => vt.Size == ps.Size)
+                    .Select(vt => vt.Name)
+                    .FirstOrDefault();
+                
                 return new ParkingSpotViewModel
                 {
                     Id = ps.Id,
@@ -111,7 +119,8 @@ namespace garage3.Controllers
                     IsAdminReserved = ps.IsAdminReserved,
                     ReservedReason = ps.ReservedReason,
                     IsAvailable = activeParking == null && !ps.IsAdminReserved,
-                    UserId = activeParking?.Vehicle?.OwnerId
+                    UserId = activeParking?.Vehicle?.OwnerId,
+                    VehicleTypesAllowed = allowedType ?? "No vehicle type matches this spot size"
                 };
             }).ToList();
 
@@ -154,6 +163,16 @@ namespace garage3.Controllers
                 .ThenInclude(v => v.VehicleType)
                 .FirstOrDefaultAsync(p => p.ParkingSpotId == id && p.CheckOutTime == null);
 
+            // Check if spot is available (no active parking and not admin reserved)
+            var isAvailable = activeParking == null && !parkingSpot.IsAdminReserved;
+
+            // Get all vehicle types to determine which one is allowed for this spot
+            var allVehicleTypes = await _context.VehicleTypes.ToListAsync();
+            var allowedType = allVehicleTypes
+                .Where(vt => vt.Size == parkingSpot.Size)
+                .Select(vt => vt.Name)
+                .FirstOrDefault();
+
             var model = new ParkingSpotViewModel
             {
                 Id = parkingSpot.Id,
@@ -161,8 +180,9 @@ namespace garage3.Controllers
                 Size = parkingSpot.Size,
                 IsAdminReserved = parkingSpot.IsAdminReserved,
                 ReservedReason = parkingSpot.ReservedReason,
-                IsAvailable = !parkingSpot.IsOccupied && !parkingSpot.IsAdminReserved,
+                IsAvailable = isAvailable,
                 VehicleTypeName = activeParking?.Vehicle?.VehicleType?.Name,
+                VehicleTypesAllowed = allowedType ?? "No vehicle type matches this spot size",
                 RegistrationNumber = activeParking?.Vehicle?.RegistrationNumber,
                 Manufacturer = activeParking?.Vehicle?.Manufacturer,
                 Model = activeParking?.Vehicle?.Model,
@@ -255,16 +275,15 @@ namespace garage3.Controllers
                 return RedirectToAction("Search");
             }
 
-            // Check if spot size is sufficient for the vehicle type
-            // Debug logging
+            // Check if spot size exactly matches the vehicle type size
+            // Each spot can only accommodate one specific vehicle type based on exact size match
             Console.WriteLine($"[DEBUG] Validating spot {parkingSpot.SpotNumber} (size {parkingSpot.Size}) for vehicle type {vehicleType.Name} (size {vehicleType.Size})");
-            Console.WriteLine($"[DEBUG] Validation check: {parkingSpot.Size} < {vehicleType.Size} = {parkingSpot.Size < vehicleType.Size}");
-            Console.WriteLine($"[DEBUG] Spot size type: {parkingSpot.Size.GetType()}, Vehicle type size: {vehicleType.Size.GetType()}");
+            Console.WriteLine($"[DEBUG] Validation check: {parkingSpot.Size} == {vehicleType.Size} = {parkingSpot.Size == vehicleType.Size}");
 
-            if (parkingSpot.Size < vehicleType.Size)
+            if (parkingSpot.Size != vehicleType.Size)
             {
-                Console.WriteLine($"[DEBUG] Validation FAILED - Spot too small");
-                TempData["Message"] = $"This spot is too small for a {vehicleType.Name}. Minimum size required: {vehicleType.Size}.";
+                Console.WriteLine($"[DEBUG] Validation FAILED - Size mismatch");
+                TempData["Message"] = $"This spot (Size {parkingSpot.Size}) can only accommodate vehicle types of exactly size {parkingSpot.Size}. The {vehicleType.Name} requires size {vehicleType.Size}.";
                 return RedirectToAction("Search");
             }
 
@@ -313,24 +332,6 @@ namespace garage3.Controllers
             await _context.SaveChangesAsync();
 
             return RedirectToAction("Search");
-        }
-
-        private string GetVehicleTypesAllowed(int spotNumber)
-        {
-            return spotNumber switch
-            {
-                1 => "Motorcycle",
-                2 => "Car, Motorcycle",
-                3 => "Car",
-                4 => "Car",
-                5 => "Car",
-                6 => "Truck",
-                7 => "Bus, Truck",
-                8 => "Bus, Truck",
-                9 => "Truck",
-                10 => "Bus, Truck",
-                _ => "Unknown"
-            };
         }
     }
 }

@@ -346,15 +346,39 @@ namespace garage3.Controllers
                 .OrderBy(vt => vt.Name)
                 .ToListAsync();
 
-            ViewBag.VehicleTypes = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(
-                vehicleTypes, "Id", "Name");
-
             var model = new ParkedVehicleCreateVm();
 
             if (parkingSpotId.HasValue)
             {
                 ViewBag.ParkingSpotId = parkingSpotId.Value;
+
+                // Get the parking spot to determine the allowed vehicle type
+                var parkingSpot = await _context.ParkingSpots
+                    .FirstOrDefaultAsync(ps => ps.Id == parkingSpotId.Value);
+
+                if (parkingSpot != null)
+                {
+                    // Find the vehicle type that matches the spot size
+                    var allowedVehicleType = vehicleTypes
+                        .FirstOrDefault(vt => vt.Size == parkingSpot.Size);
+
+                    if (allowedVehicleType != null)
+                    {
+                        // Pre-select the vehicle type
+                        model.VehicleTypeId = allowedVehicleType.Id;
+                        ViewBag.SpotSize = parkingSpot.Size;
+                        ViewBag.AllowedVehicleTypeName = allowedVehicleType.Name;
+                    }
+                    else
+                    {
+                        TempData["Message"] = $"No vehicle type found for spot size {parkingSpot.Size}. Please contact admin.";
+                        return RedirectToAction("Search", "ParkingSpots");
+                    }
+                }
             }
+
+            ViewBag.VehicleTypes = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(
+                vehicleTypes, "Id", "Name", model.VehicleTypeId);
 
             return View(model);
         }
@@ -404,11 +428,11 @@ namespace garage3.Controllers
                     return RedirectToAction("Search", "ParkingSpots");
                 }
 
-                // Check if the vehicle type is allowed for this spot based on spot number
-                var allowedVehicleTypes = GetAllowedVehicleTypes(parkingSpot.SpotNumber);
-                if (!allowedVehicleTypes.Contains(vehicleType.Name))
+                // Check if the vehicle type is allowed for this spot based on size comparison
+                // Vehicle can park if spot size >= vehicle type size
+                if (parkingSpot.Size < vehicleType.Size)
                 {
-                    TempData["Message"] = $"This spot does not allow {vehicleType.Name}. Allowed types: {string.Join(", ", allowedVehicleTypes)}.";
+                    TempData["Message"] = $"This spot (size {parkingSpot.Size}) is too small for {vehicleType.Name} (size {vehicleType.Size}).";
                     return RedirectToAction("Search", "ParkingSpots");
                 }
 
@@ -464,34 +488,6 @@ namespace garage3.Controllers
                 vehicleTypes, "Id", "Name");
 
             return View(createVm);
-        }
-
-        private List<string> GetAllowedVehicleTypes(int spotNumber)
-        {
-            return spotNumber switch
-            {
-                1 => new List<string> { "Motorcycle" },
-                2 => new List<string> { "Car", "Motorcycle" },
-                3 => new List<string> { "Car" },
-                4 => new List<string> { "Car" },
-                5 => new List<string> { "Car" },
-                6 => new List<string> { "Truck" },
-                7 => new List<string> { "Bus", "Truck" },
-                8 => new List<string> { "Bus", "Truck" },
-                9 => new List<string> { "Truck" },
-                10 => new List<string> { "Bus", "Truck" },
-                11 => new List<string> { "Motorcycle" },
-                12 => new List<string> { "Car", "Motorcycle" },
-                13 => new List<string> { "Car" },
-                14 => new List<string> { "Car" },
-                15 => new List<string> { "Car" },
-                16 => new List<string> { "Truck" },
-                17 => new List<string> { "Bus", "Truck" },
-                18 => new List<string> { "Bus", "Truck" },
-                19 => new List<string> { "Truck" },
-                20 => new List<string> { "Bus", "Truck" },
-                _ => new List<string> { "Car", "Motorcycle", "Bus", "Truck" }
-            };
         }
     }
 }
