@@ -14,7 +14,8 @@ namespace garage3.Models
         public string PhoneNumber { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTimeOffset? LockoutEnd { get; set; }
-        public List<VehicleVm> Vehicles { get; set; }
+        public List<VehicleVm>? Vehicles { get; set; }
+
     }
 
     public class VehicleVm

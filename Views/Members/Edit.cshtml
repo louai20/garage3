@@ -1,17 +1,17 @@
-@model garage3.Models.MemberDetailsVm
+@model garage3.Models.MemberEditVm
 
 @{
     ViewData["Title"] = "Edit Member Details";
 }
 
-<h1>@Model.FullName</h1>
-<p class="text-muted">Edit member details directly</p>
+<h1>@Model.FirstName @Model.LastName </h1>
+<p class="text-muted">Edit member details</p>
 
 <form asp-action="Edit" asp-controller="Members" method="post">
 @Html.AntiForgeryToken()
     <input type="hidden" asp-for="UserId" />
     <div class="card mb-4">
-        <div-- class="card-body">
+        <div class="card-body">
             <div class="mb-2">
                 <label class="form-label"><strong>First Name:</strong></label>
                 <input asp-for="FirstName" class="form-control" />
@@ -26,22 +26,6 @@
                 <label class="form-label"><strong>Personal Number:</strong></label>
                 <input asp-for="PersonalNumber" class="form-control" />
             </div>
-
-            <!--div class="mb-2">
-                <label class="form-label"><strong>Role:</strong></label>
-                <select asp-for="Role" class="form-select">
-                    <option value="Admin" @(Model.Role == "Admin" ? "selected" : "")>Admin</option>
-                    <option value="Member" @(Model.Role == "Member" ? "selected" : "")>Member</option>
-                </select>
-            </div-->
-
-            <!--div class="mb-2">
-                <label class="form-label"><strong>Membership:</strong></label>
-                <select asp-for="MembershipType" class="form-select">
-                    <option value="Pro" @(Model.MembershipType == "Pro" ? "selected" : "")>Pro</option>
-                    <option value="Standard" @(Model.MembershipType == "Standard" ? "selected" : "")>Standard</option>
-                </select>
-            </div-->
 
             <div class="mb-2">
                 <label class="form-label"><strong>Membership valid until:</strong></label>
