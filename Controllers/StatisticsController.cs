@@ -63,23 +63,24 @@ namespace garage3.Controllers
                 .OrderBy(n => n)
                 .ToList();
 
+            //Sortera på storlek
+            var sizeStats = spots
+    .GroupBy(s => s.Size)
+    .OrderBy(g => g.Key)
+    .Select(g => new SizeStatVm
+    {
+        Size = g.Key,
+        Total = g.Count(),
+        Occupied = g.Count(x => occupiedSet.Contains(x.SpotNumber))
+    })
+    .ToList();
+
+
             // Totals
             int total = spots.Count;
             int occupied = occupiedSpotNumbers.Count;
             int free = freeSpotNumbers.Count;
 
-            // Per storlek (upptagen = parked OR booked)
-            int smallTotal = spots.Count(s => s.Size == 1);
-            int smallOccupied = spots.Count(s => s.Size == 1 && occupiedSet.Contains(s.SpotNumber));
-            int smallFree = smallTotal - smallOccupied;
-
-            int mediumTotal = spots.Count(s => s.Size == 2);
-            int mediumOccupied = spots.Count(s => s.Size == 2 && occupiedSet.Contains(s.SpotNumber));
-            int mediumFree = mediumTotal - mediumOccupied;
-
-            int largeTotal = spots.Count(s => s.Size == 3);
-            int largeOccupied = spots.Count(s => s.Size == 3 && occupiedSet.Contains(s.SpotNumber));
-            int largeFree = largeTotal - largeOccupied;
 
             var vm = new GarageStatsVm
             {
@@ -87,24 +88,15 @@ namespace garage3.Controllers
                 OccupiedSpots = occupied,
                 FreeSpots = free,
 
-                SmallTotal = smallTotal,
-                SmallOccupied = smallOccupied,
-                SmallFree = smallFree,
-
-                MediumTotal = mediumTotal,
-                MediumOccupied = mediumOccupied,
-                MediumFree = mediumFree,
-
-                LargeTotal = largeTotal,
-                LargeOccupied = largeOccupied,
-                LargeFree = largeFree,
-
                 FreeSpotNumbers = freeSpotNumbers,
                 OccupiedSpotNumbers = occupiedSpotNumbers,
 
                 ParkedSpotNumbers = parkedSpotNumbers,
-                BookedSpotNumbers = bookedSpotNumbers
+                BookedSpotNumbers = bookedSpotNumbers,
+
+                SizeStats = sizeStats
             };
+
 
 
             return View(vm);
