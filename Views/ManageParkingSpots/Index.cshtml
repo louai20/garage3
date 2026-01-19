@@ -1,4 +1,4 @@
-﻿@model IEnumerable<garage3.Data.ParkingSpot>
+@model IEnumerable<garage3.Data.ParkingSpot>
 
 @if (TempData["SuccessMessage"] is string success) {
     <div class="alert alert-success alert-dismissible fade show">
@@ -22,6 +22,7 @@
 
 <p>
     <a asp-action="Create" class="btn btn-primary mt-3 mb-3">Add Parking Spot</a>
+    <a asp-controller="VehicleTypes" asp-action="Index" class="btn btn-secondary mt-3 mb-3">Manage Vehicle Types</a>
 </p>
 
 <table class="table table-striped table-hover">

@@ -395,6 +395,9 @@ namespace garage3.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
+                    b.HasIndex("Size")
+                        .IsUnique();
+
                     b.ToTable("VehicleTypes");
                 });
 

@@ -1,7 +1,8 @@
-﻿@model garage3.Data.ParkingSpot
+@model garage3.Data.ParkingSpot
 
 @{
     ViewData["Title"] = "Create";
+    var vehicleTypes = ViewBag.VehicleTypes as List<garage3.Data.VehicleType>;
 }
 
 <h1>Create</h1>
@@ -18,8 +19,20 @@
                 <span asp-validation-for="SpotNumber" class="text-danger"></span>
             </div>
             <div class="form-group">
+                <label class="control-label">Vehicle Type</label>
+                <select id="vehicleTypeSelect" class="form-control">
+                    <option value="">-- Select Vehicle Type --</option>
+                    @if (vehicleTypes != null)
+                    {
+                        foreach (var vt in vehicleTypes)
+                        {
+                            <option value="@vt.Size" data-size="@vt.Size">@vt.Name (Size: @vt.Size)</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="form-group">
                 <label asp-for="Size" class="control-label"></label>
-                <input asp-for="Size" class="form-control" />
                 <span asp-validation-for="Size" class="text-danger"></span>
             </div>
             <div class="form-group form-check">
@@ -40,4 +53,15 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        document.getElementById('vehicleTypeSelect').addEventListener('change', function() {
+            var sizeInput = document.getElementById('sizeInput');
+            var selectedOption = this.options[this.selectedIndex];
+            if (selectedOption.value) {
+                sizeInput.value = selectedOption.getAttribute('data-size');
+            } else {
+                sizeInput.value = '';
+            }
+        });
+    </script>
 }

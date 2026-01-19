@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace garage3.Data
@@ -36,6 +36,7 @@ namespace garage3.Data
             {
                 entity.Property(vt => vt.Name).HasMaxLength(40).IsRequired();
                 entity.HasIndex(vt => vt.Name).IsUnique();
+                entity.HasIndex(vt => vt.Size).IsUnique();
             });
 
             // -------------------------
