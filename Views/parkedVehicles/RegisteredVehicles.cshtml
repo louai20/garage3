@@ -102,7 +102,7 @@
                                         <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">
                                             <i class="bi bi-pencil"></i> Edit
                                         </a>
-                                        <a asp-controller="ParkingSpots" asp-action="Search" class="btn btn-sm btn-primary">
+                                        <a asp-controller="ParkingSpots" asp-action="Search" asp-route-vehicleTypeId="@item.VehicleTypeId" class="btn btn-sm btn-primary">
                                             <i class="bi bi-car-front"></i> Park
                                         </a>
                                         <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">

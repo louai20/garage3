@@ -88,9 +88,9 @@ namespace garage3.Controllers
 
                 if (vehicleType != null)
                 {
-                    // Filter spots based on size comparison
-                    // Vehicle can park if spot size >= vehicle type size
-                    allSpots = allSpots.Where(ps => ps.Size >= vehicleType.Size).ToList();
+                    // Filter spots based on exact size match
+                    // Each spot size maps to exactly one vehicle type
+                    allSpots = allSpots.Where(ps => ps.Size == vehicleType.Size).ToList();
                 }
             }
 

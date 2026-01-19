@@ -47,6 +47,7 @@ namespace garage3.Controllers
             {
                 Id = v.Id,
                 RegistrationNumber = v.RegistrationNumber,
+                VehicleTypeId = v.VehicleTypeId,
                 VehicleTypeName = v.VehicleType.Name,
                 Color = v.Color,
                 Manufacturer = v.Manufacturer,

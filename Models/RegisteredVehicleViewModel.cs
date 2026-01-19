@@ -9,6 +9,8 @@ namespace garage3.Models
         [Display(Name = "Registration Number")]
         public string RegistrationNumber { get; set; } = string.Empty;
 
+        public int VehicleTypeId { get; set; }
+
         [Display(Name = "Vehicle Type")]
         public string VehicleTypeName { get; set; } = string.Empty;
 
