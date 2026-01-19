@@ -23,5 +23,6 @@ namespace garage3.Models
         public string RegistrationNumber { get; set; }
         public string VehicleType { get; set; }
         public bool IsParked { get; set; }
+        public decimal ActiveParkingCost { get; set; }
     }
 }

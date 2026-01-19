@@ -74,49 +74,45 @@ namespace garage3.Controllers
         public async Task<IActionResult> Details(string id)
         {
             if (string.IsNullOrEmpty(id))
-            {
                 return NotFound();
-            }
 
             var user = await _context.Users
                 .Where(u => u.Id == id)
-                .Select(u => new
-                {
-                    User = u,
-                    Vehicles = u.Vehicles.Select(v => new
-                    {
-                        v.RegistrationNumber,
-                        VehicleType = v.VehicleType.Name,
-                        IsParked = v.Parkings.Any(p => p.CheckOutTime == null)
-                    }).ToList()
-                })
+                .Include(u => u.Vehicles)
+                    .ThenInclude(v => v.Parkings)
+                .Include(u => u.Vehicles)
+                    .ThenInclude(v => v.VehicleType)
                 .FirstOrDefaultAsync();
 
             if (user == null)
-            {
                 return NotFound();
-            }
 
-            var role = (await _userManager.GetRolesAsync(user.User)).FirstOrDefault() ?? "No role";
+            var role = (await _userManager.GetRolesAsync(user)).FirstOrDefault() ?? "No role";
+
+            var now = DateTime.Now;
+            decimal pricePerHour = 25m;
 
             var model = new MemberDetailsVm
             {
-                UserId = user.User.Id,
-                FirstName = user.User.FirstName,
-                LastName = user.User.LastName,
-                PersonalNumber = user.User.PersonalNumber,
+                UserId = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                PersonalNumber = user.PersonalNumber,
                 Role = role,
-                MembershipType = user.User.MembershipType,
-                MembershipValidUntil = user.User.MembershipValidUntil,
-                Email = user.User.Email,
-                PhoneNumber = user.User.PhoneNumber,
-                CreatedAt = user.User.CreatedAt,
-                LockoutEnd = user.User.LockoutEnd,
+                MembershipType = user.MembershipType,
+                MembershipValidUntil = user.MembershipValidUntil,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                CreatedAt = user.CreatedAt,
+                LockoutEnd = user.LockoutEnd,
                 Vehicles = user.Vehicles.Select(v => new VehicleVm
                 {
                     RegistrationNumber = v.RegistrationNumber,
-                    VehicleType = v.VehicleType,
-                    IsParked = v.IsParked
+                    VehicleType = v.VehicleType.Name,
+                    IsParked = v.Parkings.Any(p => p.CheckOutTime == null),
+                    ActiveParkingCost = v.Parkings
+                        .Where(p => p.CheckOutTime == null)
+                        .Sum(p => (decimal)((decimal)(now - p.CheckInTime).TotalHours * p.PricePerHour))
                 }).ToList()
             };
 

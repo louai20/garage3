@@ -19,7 +19,7 @@ namespace garage3.Data
         public DateTime? CheckOutTime { get; set; }
 
         [Range(0, 100000)]
-        public decimal PricePerHour { get; set; }
+        public decimal PricePerHour { get; set; } = 25m;
 
         public decimal? TotalCost { get; set; }
     }
