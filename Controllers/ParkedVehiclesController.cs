@@ -406,6 +406,78 @@ namespace garage3.Controllers
                 // Get the current user
                 var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
+                if (string.IsNullOrEmpty(userId))
+                {
+                    TempData["Message"] = "User not authenticated.";
+                    return RedirectToAction("Index", "Home");
+                }
+
+                // Get user and check age restriction (18+)
+                var user = await _context.Users.FindAsync(userId);
+                if (user == null)
+                {
+                    TempData["Message"] = "User not found.";
+                    return RedirectToAction("Register");
+                }
+
+                // Extract DateOfBirth from personal number (Swedish format: YYMMDD-XXXX, YYYYMMDD-XXXX, or YYMMDDXXXX)
+                DateTime dateOfBirth;
+                try
+                {
+                    var personalNum = user.PersonalNumber.Replace("-", "").Replace(" ", "");
+                    if (personalNum.Length >= 6)
+                    {
+                        int year, month, day;
+                        
+                        // Check if it's YYYYMMDD format (12 digits) or YYMMDD format (10 digits)
+                        if (personalNum.Length >= 8 && personalNum.Substring(0, 2) == "19" || personalNum.Substring(0, 2) == "20")
+                        {
+                            // YYYYMMDD format (e.g., 20100753)
+                            year = int.Parse(personalNum.Substring(0, 4));
+                            month = int.Parse(personalNum.Substring(4, 2));
+                            day = int.Parse(personalNum.Substring(6, 2));
+                        }
+                        else
+                        {
+                            // YYMMDD format (e.g., 100753)
+                            year = int.Parse(personalNum.Substring(0, 2));
+                            month = int.Parse(personalNum.Substring(2, 2));
+                            day = int.Parse(personalNum.Substring(4, 2));
+                            
+                            // Swedish personal numbers use YYMMDD format, where YY is the last 2 digits of the year
+                            // If year is 00-99, assume 1900s for years 00-99, but for years 00-20, assume 2000s
+                            if (year < 100)
+                            {
+                                // For Swedish personal numbers, years 00-20 are typically 2000s
+                                // Years 21-99 are typically 1900s
+                                year += year <= 20 ? 2000 : 1900;
+                            }
+                        }
+                        
+                        dateOfBirth = new DateTime(year, month, day);
+                    }
+                    else
+                    {
+                        TempData["Message"] = "Invalid personal number format.";
+                        return RedirectToAction("Register");
+                    }
+                }
+                catch
+                {
+                    TempData["Message"] = "Could not extract date of birth from personal number.";
+                    return RedirectToAction("Register");
+                }
+
+                // Calculate age
+                var today = DateTime.Today;
+                var age = today.Year - dateOfBirth.Year;
+                if (dateOfBirth.Date > today.AddYears(-age)) age--;
+                if (age < 18)
+                {
+                    TempData["Message"] = $"You must be 18 or older to register a vehicle. Your age: {age}";
+                    return RedirectToAction("Register");
+                }
+
                 // Check if vehicle already exists
                 var existingVehicle = await _context.Vehicles
                     .FirstOrDefaultAsync(v => v.RegistrationNumber.ToUpper() == createVm.LicensePlate.Trim().ToUpper());
@@ -424,7 +496,7 @@ namespace garage3.Controllers
                     Color = createVm.Color,
                     Manufacturer = createVm.Manufacturer,
                     Model = createVm.Model,
-                    OwnerId = userId ?? "1"
+                    OwnerId = userId
                 };
 
                 _context.Vehicles.Add(vehicle);
@@ -568,6 +640,71 @@ namespace garage3.Controllers
                 if (vehicle.OwnerId != userId)
                 {
                     TempData["Message"] = "You do not have permission to park this vehicle.";
+                    return RedirectToAction("Search", "ParkingSpots");
+                }
+
+                // Get user and check age restriction (18+)
+                var user = await _context.Users.FindAsync(userId);
+                if (user == null)
+                {
+                    TempData["Message"] = "User not found.";
+                    return RedirectToAction("Search", "ParkingSpots");
+                }
+
+                // Extract DateOfBirth from personal number (Swedish format: YYMMDD-XXXX, YYYYMMDD-XXXX, or YYMMDDXXXX)
+                DateTime dateOfBirth;
+                try
+                {
+                    var personalNum = user.PersonalNumber.Replace("-", "").Replace(" ", "");
+                    if (personalNum.Length >= 6)
+                    {
+                        int year, month, day;
+                        
+                        // Check if it's YYYYMMDD format (12 digits) or YYMMDD format (10 digits)
+                        if (personalNum.Length >= 8 && personalNum.Substring(0, 2) == "19" || personalNum.Substring(0, 2) == "20")
+                        {
+                            // YYYYMMDD format (e.g., 20100753)
+                            year = int.Parse(personalNum.Substring(0, 4));
+                            month = int.Parse(personalNum.Substring(4, 2));
+                            day = int.Parse(personalNum.Substring(6, 2));
+                        }
+                        else
+                        {
+                            // YYMMDD format (e.g., 100753)
+                            year = int.Parse(personalNum.Substring(0, 2));
+                            month = int.Parse(personalNum.Substring(2, 2));
+                            day = int.Parse(personalNum.Substring(4, 2));
+                            
+                            // Swedish personal numbers use YYMMDD format, where YY is the last 2 digits of the year
+                            // If year is 00-99, assume 1900s for years 00-99, but for years 00-20, assume 2000s
+                            if (year < 100)
+                            {
+                                // For Swedish personal numbers, years 00-20 are typically 2000s
+                                // Years 21-99 are typically 1900s
+                                year += year <= 20 ? 2000 : 1900;
+                            }
+                        }
+                        
+                        dateOfBirth = new DateTime(year, month, day);
+                    }
+                    else
+                    {
+                        TempData["Message"] = "Invalid personal number format.";
+                        return RedirectToAction("Search", "ParkingSpots");
+                    }
+                }
+                catch
+                {
+                    TempData["Message"] = "Could not extract date of birth from personal number.";
+                    return RedirectToAction("Search", "ParkingSpots");
+                }
+
+                var today = DateTime.Today;
+                var age = today.Year - dateOfBirth.Year;
+                if (dateOfBirth.Date > today.AddYears(-age)) age--;
+                if (age < 18)
+                {
+                    TempData["Message"] = $"You must be 18 or older to park a vehicle. Your age: {age}";
                     return RedirectToAction("Search", "ParkingSpots");
                 }
 

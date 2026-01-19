@@ -163,7 +163,7 @@ var member7 = await EnsureUserAsync(
     password: "Member123!",
     firstName: "Alice",
     lastName: "Nilsson",
-    personalNumber: "19890912-3456",
+    personalNumber: "20100912-3456",
     role: "Member"
 );
 
