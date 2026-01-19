@@ -58,7 +58,7 @@ namespace garage3.Controllers
 		// For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> Create([Bind("Id,SpotNumber,Size,IsBooked")] ParkingSpot parkingSpot)
+		public async Task<IActionResult> Create([Bind("Id,SpotNumber,Size")] ParkingSpot parkingSpot)
 		{
 			if (!ModelState.IsValid)
 				return View(parkingSpot);
@@ -149,7 +149,7 @@ namespace garage3.Controllers
 		// For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> Edit(int id, [Bind("Id,SpotNumber,Size,IsBooked")] ParkingSpot parkingSpot)
+		public async Task<IActionResult> Edit(int id, [Bind("Id,SpotNumber,Size")] ParkingSpot parkingSpot)
 		{
 			if (id != parkingSpot.Id) {
 				return NotFound();

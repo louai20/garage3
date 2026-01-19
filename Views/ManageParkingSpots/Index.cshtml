@@ -29,7 +29,7 @@
         <tr>
             <th>Spot No.</th>
             <th>Size</th>
-            <th>Booking</th>
+        
             <th>Occupancy</th>
             <th>Admin reserve</th>
             <th></th>
@@ -43,13 +43,7 @@
                 <td>@item.SpotNumber</td>
                 <td>@item.Size</td>
 
-                <td>
-                    @if (item.IsBooked) {
-                        <span class="badge text-bg-warning">Booked</span>
-                    } else {
-                        <span class="badge text-bg-success">Available</span>
-                    }
-                </td>
+    
 
                 <td>
                     @if (occupied) {
