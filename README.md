@@ -12,6 +12,57 @@ The project demonstrates:
 - Admin vs Member functionality
 
 ---
+## Database Diagram 
+
+```mermaid
+erDiagram
+  APPLICATION_USER ||--o{ VEHICLE : owns
+  VEHICLE_TYPE     ||--o{ VEHICLE : categorizes
+  VEHICLE          ||--o{ PARKING : is_parked_in
+  PARKING_SPOT     ||--o{ PARKING : hosts
+
+  APPLICATION_USER {
+    string Id PK
+    string UserName
+    string Email
+    string FirstName
+    string LastName
+    string PersonalNumber
+  }
+
+  VEHICLE {
+    int    Id PK
+    string RegistrationNumber
+    int    VehicleTypeId FK
+    string OwnerId FK
+    string Manufacturer
+    string Model
+    string Color
+  }
+
+  VEHICLE_TYPE {
+    int    Id PK
+    string Name
+    int    Size
+  }
+
+  PARKING_SPOT {
+    int   Id PK
+    int   SpotNumber
+    int   Size
+    bool  IsBooked
+  }
+
+  PARKING {
+    int      Id PK
+    int      VehicleId FK
+    int      ParkingSpotId FK
+    datetime CheckInTime
+    datetime CheckOutTime
+    decimal  PricePerHour
+  }
+  ```
+---
 
 ## Getting Started
 
