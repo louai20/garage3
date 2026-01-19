@@ -124,14 +124,32 @@ namespace garage3.Controllers
         }
 
 
+        [HttpGet]
+        public async Task<IActionResult> Edit(string id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return NotFound();
+
+            return View(new MemberEditVm
+            {
+                UserId = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                PersonalNumber = user.PersonalNumber,
+                MembershipValidUntil = user.MembershipValidUntil,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber
+            });
+        }
+
+
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(MemberDetailsVm model)
+        public async Task<IActionResult> Edit(MemberEditVm model)
         {
             if (!ModelState.IsValid)
-            {
                 return View(model);
-            }
 
             var user = await _context.Users.FindAsync(model.UserId);
             if (user == null) return NotFound();
@@ -139,22 +157,93 @@ namespace garage3.Controllers
             user.FirstName = model.FirstName;
             user.LastName = model.LastName;
             user.PersonalNumber = model.PersonalNumber;
+            user.MembershipValidUntil = model.MembershipValidUntil;
             user.Email = model.Email;
             user.PhoneNumber = model.PhoneNumber;
-            user.MembershipType = model.MembershipType;
-            user.MembershipValidUntil = model.MembershipValidUntil;
-
-            var currentRole = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
-            if (currentRole != model.Role)
-            {
-                if (currentRole != null)
-                    await _userManager.RemoveFromRoleAsync(user, currentRole);
-                await _userManager.AddToRoleAsync(user, model.Role);
-            }
 
             await _context.SaveChangesAsync();
-            return RedirectToAction("Details", new { id = model.UserId });
+
+            return RedirectToAction(nameof(Details), new { id = model.UserId });
         }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+                return NotFound();
+
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+                return NotFound();
+
+            var vehicles = await _context.Vehicles
+                .Where(v => v.OwnerId == id)
+                .Include(v => v.Parkings)
+                .ToListAsync();
+
+            _context.Parkings.RemoveRange(vehicles.SelectMany(v => v.Parkings));
+            _context.Vehicles.RemoveRange(vehicles);
+
+            await _context.SaveChangesAsync();
+
+            var result = await _userManager.DeleteAsync(user);
+
+            if (!result.Succeeded)
+            {
+                TempData["ErrorMessage"] = "Failed to delete member";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            TempData["SuccessMessage"] = "Member deleted successfully";
+            return RedirectToAction(nameof(Index));
+        }
+
+
+        [HttpGet]
+        public IActionResult Create()
+        {
+            return View(new MemberCreateVm());
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(MemberCreateVm model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var user = new ApplicationUser
+            {
+                UserName = model.Email,
+                Email = model.Email,
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                PersonalNumber = model.PersonalNumber,
+                PhoneNumber = model.PhoneNumber,
+                MembershipType = model.MembershipType,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            var result = await _userManager.CreateAsync(user, model.Password);
+
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                    ModelState.AddModelError("", error.Description);
+
+                return View(model);
+            }
+
+            await _userManager.AddToRoleAsync(user, model.Role);
+
+            TempData["SuccessMessage"] = "Member created successfully";
+            return RedirectToAction(nameof(Index));
+        }
+
+
 
     }
 }

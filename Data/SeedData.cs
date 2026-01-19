@@ -41,38 +41,38 @@ namespace garage3.Data
             var passwordOk = await userManager.CheckPasswordAsync(admin, adminPassword);
             Console.WriteLine($"[SEED] Admin username={admin.UserName}, email={admin.Email}, passwordOk={passwordOk}");
 
-            // 3) VehicleTypes
-            if (!await db.VehicleTypes.AnyAsync())
-            {
-                db.VehicleTypes.AddRange(
-                    new VehicleType { Name = "Motorcycle", Size = 1 },
-                    new VehicleType { Name = "Car", Size = 2 },
-                    new VehicleType { Name = "Bus", Size = 3 },
-                    new VehicleType { Name = "Truck", Size = 4 }
-                );
-                await db.SaveChangesAsync();
-            }
+            // 3) VehicleTypes - Ensure default types exist (admins can add more via UI)
+            var vtMc = await EnsureVehicleTypeAsync(db, "Motorcycle", 1);
+            var vtBil = await EnsureVehicleTypeAsync(db, "Car", 2);
+            var vtBuss = await EnsureVehicleTypeAsync(db, "Bus", 3);
+            var vtTruck = await EnsureVehicleTypeAsync(db, "Truck", 4);
 
-
-            // Hämta typer (så vi kan koppla fordon)
-            var vtMc = await db.VehicleTypes.SingleAsync(x => x.Name == "Motorcycle");
-            var vtBil = await db.VehicleTypes.SingleAsync(x => x.Name == "Car");
-            var vtBuss = await db.VehicleTypes.SingleAsync(x => x.Name == "Bus");
-            var vtTruck = await db.VehicleTypes.SingleAsync(x => x.Name == "Truck");
-
-            // 4) ParkingSpots
+            // 4) ParkingSpots - Create spots dynamically based on existing vehicle types (admins can add more via UI)
             if (!await db.ParkingSpots.AnyAsync())
             {
+                // Get the maximum vehicle size from existing vehicle types
+                var maxVehicleSize = await db.VehicleTypes.AnyAsync()
+                    ? await db.VehicleTypes.MaxAsync(x => x.Size)
+                    : 4; // Default to 4 if no vehicle types exist
+
                 var spots = new List<ParkingSpot>();
-                for (int i = 1; i <= 20; i++)
+                int spotNumber = 1;
+
+                // Create spots for each size level
+                for (int size = 1; size <= maxVehicleSize; size++)
                 {
-                    int size = i <= 6 ? 1 : i <= 15 ? 2 : i <= 18 ? 3 : 4;
-                    spots.Add(new ParkingSpot
+                    // Create 5 spots per size level (adjustable based on needs)
+                    int spotsPerSize = 5;
+                    
+                    for (int j = 0; j < spotsPerSize; j++)
                     {
-                        SpotNumber = i,
-                        Size = size,
-                        IsBooked = false
-                    });
+                        spots.Add(new ParkingSpot
+                        {
+                            SpotNumber = spotNumber++,
+                            Size = size,
+                            IsBooked = false
+                        });
+                    }
                 }
 
                 db.ParkingSpots.AddRange(spots);
@@ -536,6 +536,20 @@ var member25 = await EnsureUserAsync(
             });
 
             await db.SaveChangesAsync();
+        }
+
+        private static async Task<VehicleType> EnsureVehicleTypeAsync(ApplicationDbContext db, string name, int size)
+        {
+            var vehicleType = await db.VehicleTypes.FirstOrDefaultAsync(x => x.Name == name);
+            
+            if (vehicleType is null)
+            {
+                vehicleType = new VehicleType { Name = name, Size = size };
+                db.VehicleTypes.Add(vehicleType);
+                await db.SaveChangesAsync();
+            }
+
+            return vehicleType;
         }
     }
 }

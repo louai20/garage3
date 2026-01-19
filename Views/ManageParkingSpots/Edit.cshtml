@@ -1,7 +1,8 @@
-﻿@model garage3.Data.ParkingSpot
+@model garage3.Data.ParkingSpot
 
 @{
     ViewData["Title"] = "Edit Parking Spot";
+    var vehicleTypes = ViewBag.VehicleTypes as List<garage3.Data.VehicleType>;
 }
 
 <div class="d-flex align-items-center justify-content-between mb-3">
@@ -10,7 +11,7 @@
         <div class="text-muted">Update spot number, size and booking status.</div>
     </div>
 
-    <a asp-action="Index" class="btn btn-outline-secondary">
+    <a asp-controller="VehicleTypes" asp-action="Index" class="btn btn-outline-secondary">
         Back to list
     </a>
 </div>
@@ -30,8 +31,29 @@
                 </div>
 
                 <div class="col-md-6">
+                    <label class="form-label">Vehicle Type</label>
+                    <select id="vehicleTypeSelect" class="form-control">
+                        <option value="">-- Select Vehicle Type --</option>
+                        @if (vehicleTypes != null)
+                        {
+                            foreach (var vt in vehicleTypes)
+                            {
+                                if (Model.Size == vt.Size)
+                                {
+                                    <option value="@vt.Size" data-size="@vt.Size" selected="selected">@vt.Name (Size: @vt.Size)</option>
+                                }
+                                else
+                                {
+                                    <option value="@vt.Size" data-size="@vt.Size">@vt.Name (Size: @vt.Size)</option>
+                                }
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-6">
                     <label asp-for="Size" class="form-label">Size</label>
-                    <input asp-for="Size" class="form-control" />
+                    <input asp-for="Size" class="form-control" id="sizeInput" />
                     <span asp-validation-for="Size" class="text-danger"></span>
                     <div class="form-text">Example: 1 = Small, 2 = Medium, 3 = Large</div>
                 </div>
@@ -51,4 +73,15 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script>
+        document.getElementById('vehicleTypeSelect').addEventListener('change', function() {
+            var sizeInput = document.getElementById('sizeInput');
+            var selectedOption = this.options[this.selectedIndex];
+            if (selectedOption.value) {
+                sizeInput.value = selectedOption.getAttribute('data-size');
+            } else {
+                sizeInput.value = '';
+            }
+        });
+    </script>
 }

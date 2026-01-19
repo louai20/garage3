@@ -1,4 +1,4 @@
-﻿using garage3.Data;
+using garage3.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -88,8 +88,12 @@ namespace garage3.Controllers
 		}
 
 		// GET: ManageParkingSpots/Create
-		public IActionResult Create()
+		public async Task<IActionResult> Create()
 		{
+			var vehicleTypes = await _context.VehicleTypes
+				.OrderBy(vt => vt.Size)
+				.ToListAsync();
+			ViewBag.VehicleTypes = vehicleTypes;
 			return View();
 		}
 
@@ -181,6 +185,12 @@ namespace garage3.Controllers
 			if (parkingSpot == null) {
 				return NotFound();
 			}
+
+			var vehicleTypes = await _context.VehicleTypes
+				.OrderBy(vt => vt.Size)
+				.ToListAsync();
+			ViewBag.VehicleTypes = vehicleTypes;
+
 			return View(parkingSpot);
 		}
 

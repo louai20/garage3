@@ -87,42 +87,29 @@
             <div class="card-body">
                 <h5 class="card-title mb-3">By size</h5>
 
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between">
-                        <strong>Small (1)</strong>
-                        <span class="text-muted">@Model.SmallOccupied / @Model.SmallTotal occupied</span>
-                    </div>
-                    <div class="progress" role="progressbar" aria-label="Small">
-                        <div class="progress-bar"
-                             style="width:@(Model.SmallTotal == 0 ? 0 : (Model.SmallOccupied * 100 / Model.SmallTotal))%"></div>
-                    </div>
-                    <div class="text-muted small mt-1">Available: @Model.SmallFree</div>
-                </div>
+                @if (!Model.SizeStats.Any())
+                {
+                    <p class="mb-0"><em>No size data available.</em></p>
+                }
+                else
+                {
+                    @foreach (var s in Model.SizeStats.OrderBy(x => x.Size))
+                    {
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <strong>Size @s.Size</strong>
+                                <span class="text-muted">@s.Occupied / @s.Total occupied</span>
+                            </div>
 
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between">
-                        <strong>Medium (2)</strong>
-                        <span class="text-muted">@Model.MediumOccupied / @Model.MediumTotal occupied</span>
-                    </div>
-                    <div class="progress" role="progressbar" aria-label="Medium">
-                        <div class="progress-bar"
-                             style="width:@(Model.MediumTotal == 0 ? 0 : (Model.MediumOccupied * 100 / Model.MediumTotal))%"></div>
-                    </div>
-                    <div class="text-muted small mt-1">Available: @Model.MediumFree</div>
-                </div>
+                            <div class="progress" role="progressbar" aria-label="Size @s.Size">
+                                <div class="progress-bar"
+                                     style="width:@(s.Total == 0 ? 0 : (s.Occupied * 100 / s.Total))%"></div>
+                            </div>
 
-                <div>
-                    <div class="d-flex justify-content-between">
-                        <strong>Large (3)</strong>
-                        <span class="text-muted">@Model.LargeOccupied / @Model.LargeTotal occupied</span>
-                    </div>
-                    <div class="progress" role="progressbar" aria-label="Large">
-                        <div class="progress-bar"
-                             style="width:@(Model.LargeTotal == 0 ? 0 : (Model.LargeOccupied * 100 / Model.LargeTotal))%"></div>
-                    </div>
-                    <div class="text-muted small mt-1">Available: @Model.LargeFree</div>
-                </div>
-
+                            <div class="text-muted small mt-1">Available: @s.Free</div>
+                        </div>
+                    }
+                }
             </div>
         </div>
     </div>
