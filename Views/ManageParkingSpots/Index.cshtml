@@ -1,6 +1,5 @@
 ﻿@model IEnumerable<garage3.Data.ParkingSpot>
 
-
 @if (TempData["SuccessMessage"] is string success) {
     <div class="alert alert-success alert-dismissible fade show">
         @success
@@ -32,6 +31,7 @@
             <th>Size</th>
             <th>Booking</th>
             <th>Occupancy</th>
+            <th>Admin reserve</th>
             <th></th>
         </tr>
     </thead>
@@ -42,6 +42,7 @@
             <tr>
                 <td>@item.SpotNumber</td>
                 <td>@item.Size</td>
+
                 <td>
                     @if (item.IsBooked) {
                         <span class="badge text-bg-warning">Booked</span>
@@ -49,6 +50,7 @@
                         <span class="badge text-bg-success">Available</span>
                     }
                 </td>
+
                 <td>
                     @if (occupied) {
                         <span class="badge text-bg-danger">Occupied</span>
@@ -56,22 +58,75 @@
                         <span class="badge text-bg-success">Vacant</span>
                     }
                 </td>
-                <td class="text-nowrap">
-                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Details</a>
-                    @if (!occupied) {
-                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-warning">Edit</a>
+
+                <td>
+                    @if (item.IsAdminReserved) {
+                        <span class="badge text-bg-secondary">
+                            Reserved
+                            @if (!string.IsNullOrWhiteSpace(item.ReservedReason)) {
+                                <span class="ms-1">(@item.ReservedReason)</span>
+                            }
+                        </span>
+                    } else {
+                        <span class="badge text-bg-success">No</span>
                     }
-                     @if (!occupied) {
-                    <form asp-action="Delete" asp-route-id="@item.Id"
-                          method="post" class="d-inline"
-                          onsubmit="return confirm('Are you sure you want to delete this parking spot?');">
-                        <input type="hidden" name="id" value="@item.Id" />
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                            Delete
-                        </button>
-                    </form>
-        }
+                </td>
+
+                <td class="text-nowrap">
+                    <a asp-action="Details"
+                       asp-route-id="@item.Id"
+                       class="btn btn-sm btn-outline-primary">
+                        Details
+                    </a>
+
+                    @if (!occupied) {
+                        <a asp-action="Edit"
+                           asp-route-id="@item.Id"
+                           class="btn btn-sm btn-outline-warning">
+                            Edit
+                        </a>
+
+                   
+                        @if (!item.IsAdminReserved) {
+                            <form asp-action="Reserve"
+                                  asp-route-id="@item.Id"
+                                  method="post"
+                                  class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden"
+                                       name="reservedReason"
+                                       value="Maintenance" />
+                                <button type="submit"
+                                        class="btn btn-sm btn-outline-secondary">
+                                    Reserve
+                                </button>
+                            </form>
+                        } else {
+                            <form asp-action="Unreserve"
+                                  asp-route-id="@item.Id"
+                                  method="post"
+                                  class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit"
+                                        class="btn btn-sm btn-secondary">
+                                    Unreserve
+                                </button>
+                            </form>
+                        }
+
+                        <form asp-action="Delete"
+                              asp-route-id="@item.Id"
+                              method="post"
+                              class="d-inline"
+                              onsubmit="return confirm('Are you sure you want to delete this parking spot?');">
+                            <input type="hidden" name="id" value="@item.Id" />
+                            @Html.AntiForgeryToken()
+                            <button type="submit"
+                                    class="btn btn-sm btn-outline-danger">
+                                Delete
+                            </button>
+                        </form>
+                    }
                 </td>
             </tr>
         }

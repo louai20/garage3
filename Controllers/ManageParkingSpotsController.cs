@@ -76,6 +76,60 @@ namespace garage3.Controllers
 			return RedirectToAction(nameof(Index));
 		}
 
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public async Task<IActionResult> Reserve(int id, string? reservedReason)
+		{
+			var spot = await _context.ParkingSpots
+				.Include(s => s.Parkings)
+				.FirstOrDefaultAsync(s => s.Id == id);
+
+			if (spot == null) return NotFound();
+
+			var occupied = spot.Parkings.Any(p => p.CheckOutTime == null);
+
+			if (occupied) {
+				TempData["ErrorMessage"] = "The parking spot is currently occupied and cannot be reserved.";
+				return RedirectToAction(nameof(Index));
+			}
+
+			if (spot.IsAdminReserved) {
+				TempData["ErrorMessage"] = "The parking spot is already reserved.";
+				return RedirectToAction(nameof(Index));
+			}
+
+			spot.IsAdminReserved = true;
+			spot.ReservedReason = string.IsNullOrWhiteSpace(reservedReason) ? null : reservedReason.Trim();
+
+			await _context.SaveChangesAsync();
+
+			TempData["SuccessMessage"] = $"Parking spot {spot.SpotNumber} is now reserved.";
+			return RedirectToAction(nameof(Index));
+		}
+
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public async Task<IActionResult> Unreserve(int id)
+		{
+			var spot = await _context.ParkingSpots.FirstOrDefaultAsync(s => s.Id == id);
+			if (spot == null) return NotFound();
+
+			if (!spot.IsAdminReserved) {
+				TempData["ErrorMessage"] = "The parking spot is not reserved.";
+				return RedirectToAction(nameof(Index));
+			}
+
+			spot.IsAdminReserved = false;
+			spot.ReservedReason = null;
+
+			await _context.SaveChangesAsync();
+
+			TempData["SuccessMessage"] = $"Reservation removed for parking spot {spot.SpotNumber}.";
+			return RedirectToAction(nameof(Index));
+		}
+
+
+
 		// GET: ManageParkingSpots/Edit/5
 		public async Task<IActionResult> Edit(int? id)
 		{
