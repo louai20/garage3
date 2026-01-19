@@ -22,7 +22,7 @@ namespace garage3.Controllers
             var spots = await _db.ParkingSpots
                 .AsNoTracking()
                 .OrderBy(s => s.SpotNumber)
-                .Select(s => new { s.Id, s.SpotNumber, s.Size, s.IsBooked })
+                .Select(s => new { s.Id, s.SpotNumber, s.Size, s.IsAdminReserved })
                 .ToListAsync();
 
             // Aktiva parkeringar => upptagna av fordon
@@ -41,7 +41,7 @@ namespace garage3.Controllers
 
             // Bokade platser => upptagna utan fordon
             var bookedSpotNumbers = spots
-                .Where(s => s.IsBooked)
+                .Where(s => s.IsAdminReserved)
                 .Select(s => s.SpotNumber)
                 .ToList();
 
