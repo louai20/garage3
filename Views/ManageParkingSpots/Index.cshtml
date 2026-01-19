@@ -30,7 +30,9 @@
             <th>Spot No.</th>
             <th>Size</th>
         
-            <th>Occupancy</th>
+           <th>
+    <a asp-action="Index" asp-route-sortOrder="@ViewData["OccSortParm"]">Occupancy</a>
+</th>
             <th>Admin reserve</th>
             <th></th>
         </tr>

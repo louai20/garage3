@@ -20,6 +20,36 @@ namespace garage3.Controllers
 			_context = context;
 		}
 
+
+
+
+		// https://learn.microsoft.com/en-us/aspnet/core/data/ef-mvc/sort-filter-page?view=aspnetcore-10.0
+		public async Task<IActionResult> Index(string sortOrder)
+		{
+			ViewData["OccSortParm"] = sortOrder == "Occ" ? "occ_desc" : "Occ";
+
+			var spots = _context.ParkingSpots
+				.Include(p => p.Parkings)
+				.AsQueryable();
+
+			switch (sortOrder) {
+				case "Occ":
+					spots = spots.OrderBy(p => p.Parkings.Any(x => x.CheckOutTime == null));
+					break;
+
+				case "occ_desc":
+					spots = spots.OrderByDescending(p => p.Parkings.Any(x => x.CheckOutTime == null));
+					break;
+
+				default:
+					spots = spots.OrderBy(p => p.SpotNumber); 
+					break;
+			}
+
+			return View(await spots.AsNoTracking().ToListAsync());
+		}
+
+		/*
 		// GET: ManageParkingSpots
 		public async Task<IActionResult> Index()
 		{
@@ -30,6 +60,7 @@ namespace garage3.Controllers
 
 			return View(spots);
 		}
+		*/
 
 		// GET: ManageParkingSpots/Details/5
 		public async Task<IActionResult> Details(int? id)
@@ -38,8 +69,17 @@ namespace garage3.Controllers
 				return NotFound();
 			}
 
+			//var parkingSpot = await _context.ParkingSpots
+			//	.FirstOrDefaultAsync(m => m.Id == id);
+
 			var parkingSpot = await _context.ParkingSpots
-				.FirstOrDefaultAsync(m => m.Id == id);
+	.Include(ps => ps.Parkings)
+		.ThenInclude(p => p.Vehicle)
+			.ThenInclude(v => v.Owner)
+	.FirstOrDefaultAsync(ps => ps.Id == id);
+
+
+
 			if (parkingSpot == null) {
 				return NotFound();
 			}
